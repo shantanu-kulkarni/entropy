@@ -20,7 +20,6 @@ export function ExploreTab({
   randomBlock, 
   surfing, 
   favorites, 
-  theme,
   onSurfChain, 
   onToggleFavorite 
 }: ExploreTabProps) {

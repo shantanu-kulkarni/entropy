@@ -130,7 +130,7 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
       setTimeout(() => {
         setBlocksGrow(true);
         // Animate blocks to grow and cover the screen
-        blockRefs.current.forEach((block, i) => {
+        blockRefs.current.forEach((block) => {
           if (block) {
             gsap.to(block, {
               y: 0,
@@ -210,13 +210,21 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
   useEffect(() => {
     if (buttonClicked && !cubeTransitionStarted) {
       setCubeTransitionStarted(true);
-      setTimeout(() => setFadeOut(true), 100); // fade out immediately
-      setTimeout(() => setShowCube(true), 800); // show cube after fade
-      setTimeout(() => setCubePulse(true), 900); // pulse after cube appears
-      setTimeout(() => setCubeExpand(true), 1500); // expand after pulse
-      setTimeout(() => {
-        if (onSplashEnd) onSplashEnd();
-      }, 2100); // route after expand
+      
+      // Single transition sequence with proper timing
+      const transitionSequence = async () => {
+        setFadeOut(true); // fade out immediately
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setShowCube(true); // show cube
+        await new Promise(resolve => setTimeout(resolve, 100));
+        setCubePulse(true); // start pulse
+        await new Promise(resolve => setTimeout(resolve, 1100));
+        setCubeExpand(true); // expand cube
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        if (onSplashEnd) onSplashEnd(); // complete transition
+      };
+      
+      transitionSequence();
     }
   }, [buttonClicked, onSplashEnd, cubeTransitionStarted]);
 
@@ -229,11 +237,6 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
   };
 
   // Fade-in style
-  const fadeStyle = {
-    opacity: show ? 1 : 0,
-    transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)',
-    display: 'inline',
-  };
 
   return (
     <div className={`fixed inset-0 flex flex-col items-center justify-center splash-screen z-50 min-h-screen min-w-full`} style={{ background: transitioning ? '#000' : undefined }}>
@@ -423,20 +426,22 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
           background: '#000',
         }}>
           <div style={{
-            width: cubeExpand ? 320 : 80,
-            height: cubeExpand ? 320 : 80,
+            width: cubeExpand ? '100vw' : 80,
+            height: cubeExpand ? '100vh' : 80,
             background: '#fff',
-            borderRadius: 16,
-            boxShadow: '0 0 40px 10px #22c55e, 0 0 80px 20px #22c55e44',
-            transition: 'all 0.6s cubic-bezier(0.4,0,0.2,1)',
-            animation: cubePulse ? 'blink 0.6s steps(2, start) 4' : 'none',
+            borderRadius: cubeExpand ? 0 : 16,
+            boxShadow: cubeExpand 
+              ? 'none' 
+              : '0 0 40px 10px #22c55e, 0 0 80px 20px #22c55e44',
+            transition: 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            animation: cubePulse ? 'smoothBlink 0.8s ease-in-out infinite' : 'none',
           }} />
         </div>
       )}
       <style>{`
-        @keyframes blink {
-          0%, 50% { opacity: 1; }
-          51%, 100% { opacity: 0.2; }
+        @keyframes smoothBlink {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.3; transform: scale(1.05); }
         }
         @keyframes robotic-blink {
           0%, 60% { opacity: 1; }

@@ -17,16 +17,13 @@ interface MainTabsProps {
   theme: Theme;
   networkStats: NetworkStats;
   searchQuery: string;
-  autoRefresh: boolean;
-  refreshInterval: number;
+  api: any; // Polkadot API instance
   onSurfChain: () => void;
   onToggleFavorite: (hash: string) => void;
   onRemoveFavorite: (hash: string) => void;
   onSearchQueryChange: (query: string) => void;
   onSearch: () => void;
   onThemeChange: (theme: Theme) => void;
-  onAutoRefreshChange: (enabled: boolean) => void;
-  onRefreshIntervalChange: (interval: number) => void;
 }
 
 export function MainTabs({
@@ -39,16 +36,13 @@ export function MainTabs({
   theme,
   networkStats,
   searchQuery,
-  autoRefresh,
-  refreshInterval,
+  api,
   onSurfChain,
   onToggleFavorite,
   onRemoveFavorite,
   onSearchQueryChange,
   onSearch,
-  onThemeChange,
-  onAutoRefreshChange,
-  onRefreshIntervalChange
+  onThemeChange
 }: MainTabsProps) {
   return (
     <Tabs value={selectedTab} onValueChange={onTabChange} className="space-y-6">
@@ -78,6 +72,7 @@ export function MainTabs({
           searchQuery={searchQuery}
           onSearchQueryChange={onSearchQueryChange}
           onSearch={onSearch}
+          api={api}
         />
       </TabsContent>
 
@@ -86,7 +81,7 @@ export function MainTabs({
       </TabsContent>
 
       <TabsContent value="analytics" className="space-y-6">
-        <AnalyticsTab />
+        <AnalyticsTab api={api} networkStats={networkStats} />
       </TabsContent>
 
       <TabsContent value="favorites" className="space-y-6">
@@ -99,11 +94,7 @@ export function MainTabs({
       <TabsContent value="settings" className="space-y-6">
         <SettingsTab
           theme={theme}
-          autoRefresh={autoRefresh}
-          refreshInterval={refreshInterval}
           onThemeChange={onThemeChange}
-          onAutoRefreshChange={onAutoRefreshChange}
-          onRefreshIntervalChange={onRefreshIntervalChange}
         />
       </TabsContent>
     </Tabs>

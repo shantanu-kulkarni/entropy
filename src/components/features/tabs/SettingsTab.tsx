@@ -1,29 +1,26 @@
-import { Settings } from "lucide-react";
+import { Settings, Palette, Sun } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Theme } from "@/types";
 
 interface SettingsTabProps {
   theme: Theme;
-  autoRefresh: boolean;
-  refreshInterval: number;
   onThemeChange: (theme: Theme) => void;
-  onAutoRefreshChange: (enabled: boolean) => void;
-  onRefreshIntervalChange: (interval: number) => void;
 }
 
 export function SettingsTab({ 
   theme, 
-  autoRefresh, 
-  refreshInterval, 
-  onThemeChange, 
-  onAutoRefreshChange, 
-  onRefreshIntervalChange 
+  onThemeChange 
 }: SettingsTabProps) {
+  const handleThemeToggle = (checked: boolean) => {
+    const newTheme: Theme = checked ? "colored" : "monochrome";
+    onThemeChange(newTheme);
+  };
+
+  const isColored = theme === "colored";
+
   return (
     <Card className="retro-card">
       <CardHeader>
@@ -37,50 +34,40 @@ export function SettingsTab({
           <div className="flex items-center justify-between">
             <div>
               <Label className="font-mono">Theme</Label>
-              <p className="text-sm text-gray-500">Choose your preferred theme</p>
+              <p className="text-sm text-gray-500">Toggle between monochrome and colored themes</p>
             </div>
-            <Select value={theme} onValueChange={(value: Theme) => onThemeChange(value)}>
-              <SelectTrigger className="w-32 font-mono">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="monochrome">Monochrome</SelectItem>
-                <SelectItem value="retro">Retro</SelectItem>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <Palette className="h-4 w-4 text-gray-600" />
+                <Label className="font-mono">Monochrome</Label>
+              </div>
+              <Switch
+                checked={isColored}
+                onCheckedChange={handleThemeToggle}
+              />
+              <div className="flex items-center space-x-2">
+                <Sun className="h-4 w-4 text-yellow-600" />
+                <Label className="font-mono">Colored</Label>
+              </div>
+            </div>
           </div>
           
           <Separator />
           
-          <div className="flex items-center justify-between">
+          <div className="space-y-4">
             <div>
-              <Label className="font-mono">Auto-refresh</Label>
-              <p className="text-sm text-gray-500">Automatically update data</p>
+              <Label className="font-mono">About</Label>
+              <p className="text-sm text-gray-500 mt-2">
+                Entropy Explorer is a desktop application for exploring the Entropy testnet blockchain. 
+                Connect to the network to view real-time block data, search for specific blocks or addresses, 
+                and analyze network statistics.
+              </p>
             </div>
-            <Switch
-              checked={autoRefresh}
-              onCheckedChange={onAutoRefreshChange}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
+            
             <div>
-              <Label className="font-mono">Refresh Interval</Label>
-              <p className="text-sm text-gray-500">How often to refresh data</p>
-            </div>
-            <div className="w-32">
-              <Slider
-                value={[refreshInterval / 1000]}
-                onValueChange={([value]) => onRefreshIntervalChange(value * 1000)}
-                max={30}
-                min={1}
-                step={1}
-                className="w-full"
-              />
-              <p className="text-xs text-gray-500 text-center font-mono">
-                {refreshInterval / 1000}s
+              <Label className="font-mono">Network</Label>
+              <p className="text-sm text-gray-500 mt-2">
+                Connected to: wss://testnet.entropy.xyz
               </p>
             </div>
           </div>

@@ -21,6 +21,6 @@ export interface QuickAction {
   action: () => void;
 }
 
-export type Theme = "light" | "dark" | "retro" | "monochrome";
+export type Theme = "monochrome" | "colored";
 
 export type ApiStatus = "connecting" | "connected" | "error"; 

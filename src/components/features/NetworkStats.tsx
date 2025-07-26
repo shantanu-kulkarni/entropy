@@ -12,7 +12,7 @@ interface NetworkStatsProps {
   theme: string;
 }
 
-export function NetworkStats({ stats, theme }: NetworkStatsProps) {
+export function NetworkStats({ stats }: NetworkStatsProps) {
   const statItems = [
     { key: 'totalBlocks', value: stats.totalBlocks, suffix: '' },
     { key: 'totalTransactions', value: stats.totalTransactions, suffix: '' },
