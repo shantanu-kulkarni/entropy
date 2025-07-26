@@ -64,7 +64,7 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
   const phrases = [
     { base: "Setting your experience", end: "...", duration: 2000 },
     { base: "Connecting to the network", end: "...", duration: 2000 },
-    { base: "Ready to surf the wave", end: "???", duration: 2000 },
+    { base: "Ready to surf the chain", end: "???", duration: 2000 },
     { base: "Let's Go", end: "!!!", duration: 4000 },
   ];
   const [phraseIdx, setPhraseIdx] = useState(0);
@@ -148,54 +148,77 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
     }
   }, [phraseIdx, blocksFallen, blocksGrow]);
 
-  // Add state for button explosion
-  const [buttonExplode, setButtonExplode] = useState(false);
-  const buttonBlockRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [buttonBlocksGrow, setButtonBlocksGrow] = useState(false);
-  const [buttonFullyCovered, setButtonFullyCovered] = useState(false);
+  // Simple button click state
+  const [buttonClicked, setButtonClicked] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
 
-  // Animate button blocks growing to cover the screen (more subtle)
+  // On button click, set transitioning to true immediately
+  const handleButtonClick = () => {
+    setTransitioning(true);
+    setButtonClicked(true);
+  };
+
+
+  // Add state for button block assembly
+  const [buttonBlocksAssembled, setButtonBlocksAssembled] = useState(false);
+  const buttonAssembleRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Initialize refs array when component mounts
   useEffect(() => {
-    if (buttonExplode && !buttonBlocksGrow) {
-      setTimeout(() => {
-        setButtonBlocksGrow(true);
-        buttonBlockRefs.current.forEach((block, i) => {
-          if (block) {
-            gsap.to(block, {
+    buttonAssembleRefs.current = Array.from({ length: 'Leverage Entropy'.length }, () => null);
+  }, []);
+
+  // Animate button blocks assembling in
+  useEffect(() => {
+    if (fullyCovered && !buttonClicked && !buttonBlocksAssembled) {
+      // Animate each block in sequence
+      buttonAssembleRefs.current.forEach((block, i) => {
+        if (block) {
+          gsap.fromTo(
+            block,
+            { y: 40, opacity: 0, scale: 0.7 },
+            {
               y: 0,
-              scaleX: 6, // less dramatic
-              scaleY: 6, // less dramatic
-              duration: 0.8, // faster and smoother
-              ease: "power1.inOut",
+              opacity: 1,
+              scale: 1,
+              duration: 0.4,
+              delay: i * 0.06 + 0.2,
+              ease: 'power2.out',
               onComplete: () => {
-                setButtonFullyCovered(true);
+                if (i === 'Leverage Entropy'.length - 1) {
+                  setButtonBlocksAssembled(true);
+                }
               }
-            });
-          }
-        });
-      }, 200);
+            }
+          );
+        }
+      });
     }
-  }, [buttonExplode, buttonBlocksGrow]);
+    if (!fullyCovered || buttonClicked) {
+      setButtonBlocksAssembled(false);
+    }
+  }, [fullyCovered, buttonClicked]);
 
-  // When button blocks fully cover, fade to white and call onSplashEnd
+  // Cube transition state
+  const [fadeOut, setFadeOut] = useState(false);
+  const [showCube, setShowCube] = useState(false);
+  const [cubePulse, setCubePulse] = useState(false);
+  const [cubeExpand, setCubeExpand] = useState(false);
+  const [cubeTransitionStarted, setCubeTransitionStarted] = useState(false);
+
+  // Trigger cube transition after button click (only once)
   useEffect(() => {
-    if (buttonFullyCovered) {
+    if (buttonClicked && !cubeTransitionStarted) {
+      setCubeTransitionStarted(true);
+      setTimeout(() => setFadeOut(true), 100); // fade out immediately
+      setTimeout(() => setShowCube(true), 800); // show cube after fade
+      setTimeout(() => setCubePulse(true), 900); // pulse after cube appears
+      setTimeout(() => setCubeExpand(true), 1500); // expand after pulse
       setTimeout(() => {
         if (onSplashEnd) onSplashEnd();
-      }, 400);
+      }, 2100); // route after expand
     }
-  }, [buttonFullyCovered, onSplashEnd]);
-
-  // After fully covered, wait 5s and trigger callback
-  // Remove this effect:
-  // useEffect(() => {
-  //   if (fullyCovered) {
-  //     const timeout = setTimeout(() => {
-  //       if (onSplashEnd) onSplashEnd();
-  //     }, 5000);
-  //     return () => clearTimeout(timeout);
-  //   }
-  // }, [fullyCovered, onSplashEnd]);
+  }, [buttonClicked, onSplashEnd, cubeTransitionStarted]);
 
   // Animation styles
   const phraseAnimStyle = {
@@ -213,77 +236,80 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 z-50 min-h-screen min-w-full">
-      <div
-        ref={containerRef}
-        className="relative flex flex-col items-center justify-center"
-        style={{ width: TITLE_WIDTH, height: TITLE_HEIGHT * 2, marginTop: 40 }}
-      >
-        {/* Animated blocks absolutely positioned over the title */}
-        <div className="absolute left-0 top-0 w-full h-full pointer-events-none" style={{ zIndex: 2 }}>
-          <div className="flex" style={{ width: TITLE_WIDTH, height: TITLE_HEIGHT }}>
-            {[...Array(BLOCK_COUNT)].map((_, i) => (
-              <div
-                key={i}
-                ref={el => (blockRefs.current[i] = el)}
-                style={{
-                  width: BLOCK_WIDTH,
-                  height: BLOCK_HEIGHT,
-                  marginRight: i !== BLOCK_COUNT - 1 ? BLOCK_GAP : 0,
-                  background: "#000",
-                  borderRadius: 10,
-                  position: "relative",
-                  zIndex: 2,
-                  transition: blocksGrow ? 'none' : undefined
-                }}
-              />
-            ))}
+    <div className={`fixed inset-0 flex flex-col items-center justify-center splash-screen z-50 min-h-screen min-w-full`} style={{ background: transitioning ? '#000' : undefined }}>
+      <div style={{ opacity: fadeOut ? 0 : 1, transition: 'opacity 0.7s cubic-bezier(0.4,0,0.2,1)' }}>
+        <div
+          ref={containerRef}
+          className="relative flex flex-col items-center justify-center"
+          style={{ width: TITLE_WIDTH, height: TITLE_HEIGHT * 2, marginTop: 40 }}
+        >
+          {/* Animated blocks absolutely positioned over the title */}
+          <div className="absolute left-0 top-0 w-full h-full pointer-events-none" style={{ zIndex: 2 }}>
+            <div className="flex" style={{ width: TITLE_WIDTH, height: TITLE_HEIGHT }}>
+              {[...Array(BLOCK_COUNT)].map((_, i) => (
+                <div
+                  key={i}
+                  ref={el => (blockRefs.current[i] = el)}
+                  style={{
+                    width: BLOCK_WIDTH,
+                    height: BLOCK_HEIGHT,
+                    marginRight: i !== BLOCK_COUNT - 1 ? BLOCK_GAP : 0,
+                    background: "#000",
+                    borderRadius: 10,
+                    position: "relative",
+                    zIndex: 2,
+                    transition: blocksGrow ? 'none' : undefined
+                  }}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-        {/* Title with blend mode */}
-        <div
-          className="w-full flex items-center justify-center"
-          style={{ height: TITLE_HEIGHT * 2, opacity: fullyCovered ? 1 : 1, transition: 'opacity 0.5s' }}
-        >
-          <span
-            style={{
-              fontFamily: '"Press Start 2P", monospace',
-              fontSize: 80,
-              color: fullyCovered ? "#fff" : "#fff",
-              letterSpacing: 8,
-              mixBlendMode: "difference",
-              zIndex: 3,
-              position: "relative",
-              userSelect: "none",
-            }}
+          {/* Title with blend mode */}
+          <div
+            className="w-full flex items-center justify-center"
+            style={{ height: TITLE_HEIGHT * 2, opacity: fullyCovered ? 1 : 1, transition: 'opacity 0.5s' }}
           >
-            {TITLE_TEXT}
-          </span>
-        </div>
-        {/* 'surf the wave' below the blocks */}
-        <div
-          className="w-full flex flex-col items-center justify-center"
-          style={{ marginTop: 16, opacity: blocksFallen ? 1 : 0, transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)' }}
-        >
-          <span
-            style={{
-              fontFamily: '"Press Start 2P", monospace',
-              fontSize: 24,
-              color: fullyCovered ? "#fff" : "#000",
-              letterSpacing: 4,
-              mixBlendMode: fullyCovered ? "normal" : "difference",
-              zIndex: 3,
-              position: "relative",
-              userSelect: "none",
-              background: 'none',
-              transition: 'color 0.5s, mix-blend-mode 0.5s'
-            }}
+            <span
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: 80,
+                color: fullyCovered ? "#fff" : "#fff",
+                letterSpacing: 8,
+                mixBlendMode: "difference",
+                zIndex: 3,
+                position: "relative",
+                userSelect: "none",
+              }}
+            >
+              {TITLE_TEXT}
+            </span>
+          </div>
+          {/* 'surf the wave' below the blocks */}
+          <div
+            className="w-full flex flex-col items-center justify-center"
+            style={{ marginTop: 16, opacity: blocksFallen ? 1 : 0, transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)' }}
           >
-            surf the wave
-          </span>
-        </div>
-        {/* Leverage Entropy button absolutely below title/subtitle, only when fullyCovered */}
-        {fullyCovered && !buttonExplode && (
+            <span
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: 24,
+                color: fullyCovered ? "#fff" : "#fff",
+                letterSpacing: 4,
+                mixBlendMode: fullyCovered ? "normal" : "difference",
+                zIndex: 3,
+                position: "relative",
+                userSelect: "none",
+                background: 'none',
+                //transition: 'color 0.5s, mix-blend-mode 0.5s'
+                transform: blocksFallen ? 'translateY(0) color 0.5s, mix-blend-mode 0.5s' : 'translateY(20px) color 0.5s, mix-blend-mode 0.5s',
+              transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1)' 
+              }}
+            >
+              surf the chain!
+            </span>
+          </div>
+                  {/* Leverage Entropy button */}
+        {fullyCovered && !buttonClicked && (
           <div
             style={{
               position: 'absolute',
@@ -295,64 +321,48 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
               zIndex: 20
             }}
           >
-            <button
-              onClick={() => setButtonExplode(true)}
-              style={{
-                padding: '16px 40px',
-                fontFamily: '"Press Start 2P", monospace',
-                fontSize: 18,
-                background: '#fff',
-                color: '#000',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
+            <div 
+              style={{ 
+                display: 'flex', 
+                position: 'relative', 
+                background: '#fff', 
+                borderRadius: 12, 
                 boxShadow: '0 2px 16px 0 #0006',
-                letterSpacing: 2,
-                transition: 'background 0.2s, color 0.2s, transform 0.18s cubic-bezier(0.4,0,0.2,1)',
-                zIndex: 10,
+                cursor: 'pointer',
+                transition: 'transform 0.18s cubic-bezier(0.4,0,0.2,1)',
+                transform: 'scale(1)',
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+              onClick={handleButtonClick}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'scale(1.08)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
             >
-              Leverage Entropy
-            </button>
-          </div>
-        )}
-        {/* Button block explosion animation */}
-        {fullyCovered && buttonExplode && (
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: `calc(${TITLE_HEIGHT * 2 + 56}px)`,
-              display: 'flex',
-              justifyContent: 'center',
-              zIndex: 30,
-              width: 400,
-              margin: '0 auto',
-              pointerEvents: 'none',
-            }}
-          >
-            <div style={{ display: 'flex' }}>
-              {[...'Leverage Entropy'].map((char, i) => (
+              {[...'Leverage Entropy'].map((char, i, arr) => (
                 <div
                   key={i}
-                  ref={el => (buttonBlockRefs.current[i] = el)}
+                  ref={el => (buttonAssembleRefs.current[i] = el)}
                   style={{
                     width: 24,
                     height: 48,
-                    marginRight: i !== 'Leverage Entropy'.length - 1 ? 4 : 0,
+                    marginRight: 0,
                     background: '#fff',
-                    borderRadius: 6,
+                    borderTopLeftRadius: i === 0 ? 12 : 0,
+                    borderBottomLeftRadius: i === 0 ? 12 : 0,
+                    borderTopRightRadius: i === arr.length - 1 ? 12 : 0,
+                    borderBottomRightRadius: i === arr.length - 1 ? 12 : 0,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontFamily: '"Press Start 2P", monospace',
                     fontSize: 18,
                     color: '#000',
-                    boxShadow: '0 2px 8px 0 #0003',
-                    transition: buttonBlocksGrow ? 'none' : undefined,
+                    boxShadow: 'none',
+                    opacity: 0,
+                    transform: 'translateY(40px) scale(0.7)',
+                    transition: 'none',
                     zIndex: 31,
                     position: 'relative',
                   }}
@@ -363,64 +373,70 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
             </div>
           </div>
         )}
-        {/* White overlay as button blocks grow */}
-        {fullyCovered && buttonExplode && (
+
+        </div>
+        {/* Bottom right enhanced animated phrase */}
+        {blocksFallen && (
           <div
             style={{
-              position: 'fixed',
-              inset: 0,
-              background: '#fff',
-              opacity: buttonBlocksGrow ? 1 : 0,
-              pointerEvents: 'none',
-              zIndex: 1000,
-              transition: 'opacity 0.8s cubic-bezier(0.4,0,0.2,1)',
+              position: "fixed",
+              right: 0,
+              bottom: 0,
+              padding: "14px 18px",
+              fontFamily: '"Press Start 2P", monospace',
+              fontSize: 14,
+              color: "#000",
+              zIndex: 100,
+              pointerEvents: "none",
+              width: "100vw",
+              letterSpacing: 1,
+              textShadow: "0 0 2px #fff, 0 0 1px #fff",
+              textAlign: "right",
+              userSelect: "none",
+              opacity: blocksGrow ? 0 : 1,
+              transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)'
             }}
-          />
+          >
+            <span style={phraseAnimStyle}>
+              {phrases[phraseIdx].base}
+              <span>
+                {typedEnd}
+                {showCursor && typedEnd.length < phrases[phraseIdx].end.length && (
+                  <span style={{
+                    display: 'inline-block',
+                    width: '1ch',
+                    animation: 'robotic-blink 0.7s steps(1) infinite',
+                    color: '#0ff',
+                    textShadow: '0 0 4px #0ff',
+                  }}>|</span>
+                )}
+              </span>
+            </span>
+          </div>
         )}
       </div>
-      {/* Bottom right enhanced animated phrase */}
-      {blocksFallen && (
-        <div
-          style={{
-            position: "fixed",
-            right: 0,
-            bottom: 0,
-            padding: "14px 18px",
-            fontFamily: '"Press Start 2P", monospace',
-            fontSize: 14,
-            color: "#000",
-            zIndex: 100,
-            pointerEvents: "none",
-            width: "100vw",
-            letterSpacing: 1,
-            textShadow: "0 0 2px #fff, 0 0 1px #fff",
-            textAlign: "right",
-            userSelect: "none",
-            opacity: blocksGrow ? 0 : 1,
-            transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)'
-          }}
-        >
-          <span style={phraseAnimStyle}>
-            {phrases[phraseIdx].base}
-            <span>
-              {typedEnd}
-              {showCursor && typedEnd.length < phrases[phraseIdx].end.length && (
-                <span style={{
-                  display: 'inline-block',
-                  width: '1ch',
-                  animation: 'robotic-blink 0.7s steps(1) infinite',
-                  color: '#0ff',
-                  textShadow: '0 0 4px #0ff',
-                }}>|</span>
-              )}
-            </span>
-          </span>
+      {/* Cube transition animation */}
+      {showCube && (
+        <div style={{
+          position: 'fixed', left: 0, right: 0, top: 0, bottom: 0, zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
+          background: '#000',
+        }}>
+          <div style={{
+            width: cubeExpand ? 320 : 80,
+            height: cubeExpand ? 320 : 80,
+            background: '#fff',
+            borderRadius: 16,
+            boxShadow: '0 0 40px 10px #22c55e, 0 0 80px 20px #22c55e44',
+            transition: 'all 0.6s cubic-bezier(0.4,0,0.2,1)',
+            animation: cubePulse ? 'blink 0.6s steps(2, start) 4' : 'none',
+          }} />
         </div>
       )}
       <style>{`
         @keyframes blink {
           0%, 50% { opacity: 1; }
-          51%, 100% { opacity: 0; }
+          51%, 100% { opacity: 0.2; }
         }
         @keyframes robotic-blink {
           0%, 60% { opacity: 1; }
