@@ -1,20 +1,23 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { ApiPromise, WsProvider } from "@polkadot/api";
-import { 
-  Globe, 
-  Search, 
-  Users, 
-  Zap, 
-  BarChart3, 
-  Settings 
-} from "lucide-react";
+import { Globe, Search, Users, Zap, BarChart3, Settings } from "lucide-react";
 import { Header } from "@/components/features/Header";
 import { NetworkStats } from "@/components/features/NetworkStats";
 import { QuickActions } from "@/components/features/QuickActions";
 import { MainTabs } from "@/components/features/MainTabs";
 import { Footer } from "@/components/features/Footer";
-import { BlockData, NetworkStats as NetworkStatsType, QuickAction, Theme, ApiStatus } from "@/types";
-import { RETRO_GRADIENTS, ENTROPY_ENDPOINT, MAX_BLOCKS_DISPLAY } from "@/constants";
+import {
+  BlockData,
+  NetworkStats as NetworkStatsType,
+  QuickAction,
+  Theme,
+  ApiStatus,
+} from "@/types";
+import {
+  RETRO_GRADIENTS,
+  ENTROPY_ENDPOINT,
+  MAX_BLOCKS_DISPLAY,
+} from "@/constants";
 
 interface HomeProps {
   onThemeChange: (theme: Theme) => void;
@@ -22,8 +25,14 @@ interface HomeProps {
   preloadedApiStatus?: ApiStatus;
 }
 
-export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomeProps) {
-  const [apiStatus, setApiStatus] = useState<ApiStatus>(preloadedApiStatus || "connecting");
+export function Home({
+  onThemeChange,
+  preloadedApi,
+  preloadedApiStatus,
+}: HomeProps) {
+  const [apiStatus, setApiStatus] = useState<ApiStatus>(
+    preloadedApiStatus || "connecting"
+  );
   const [api, setApi] = useState<ApiPromise | null>(preloadedApi || null);
   const [blocks, setBlocks] = useState<BlockData[]>([]);
   const [randomBlock, setRandomBlock] = useState<BlockData | null>(null);
@@ -33,7 +42,7 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
     totalTransactions: 0,
     activeValidators: 0,
     networkHashrate: 0,
-    averageBlockTime: 0
+    averageBlockTime: 0,
   });
   const [selectedTab, setSelectedTab] = useState("explore");
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,7 +66,7 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
       .catch(() => {
         setApiStatus("error");
       });
-    
+
     return () => {
       provider.disconnect();
     };
@@ -67,41 +76,47 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
   useEffect(() => {
     if (!api) return;
     let unsub: (() => void) | undefined;
-    
-    api.rpc.chain.subscribeNewHeads(async (header) => {
-      const newBlock: BlockData = { 
-        number: header.number.toNumber(), 
-        hash: header.hash.toHex() 
-      };
-      setBlocks((prev) => {
-        const updated = [newBlock, ...prev].slice(0, MAX_BLOCKS_DISPLAY);
-        return updated;
+
+    api.rpc.chain
+      .subscribeNewHeads(async (header) => {
+        const newBlock: BlockData = {
+          number: header.number.toNumber(),
+          hash: header.hash.toHex(),
+        };
+        setBlocks((prev) => {
+          const updated = [newBlock, ...prev].slice(0, MAX_BLOCKS_DISPLAY);
+          return updated;
+        });
+
+        updateNetworkStats();
+      })
+      .then((u) => {
+        unsub = u;
       });
-      
-      updateNetworkStats();
-    }).then((u) => { unsub = u; });
-    
-    return () => { if (unsub) unsub(); };
+
+    return () => {
+      if (unsub) unsub();
+    };
   }, [api]);
 
   // Auto-refresh functionality (simplified - always refresh every 10 seconds)
   useEffect(() => {
     if (!api) return;
-    
+
     const interval = setInterval(() => {
       updateNetworkStats();
     }, 10000); // 10 seconds
-    
+
     return () => clearInterval(interval);
   }, [api]);
 
   // Memoized updateNetworkStats function
   const updateNetworkStats = useCallback(async () => {
     if (!api) return;
-    
+
     try {
       const header = await api.rpc.chain.getHeader();
-      
+
       // Get real validator count
       let activeValidators = 0;
       try {
@@ -120,10 +135,10 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
         if (previousBlock > 0) {
           // const currentHash = await api.rpc.chain.getBlockHash(currentBlock);
           // const previousHash = await api.rpc.chain.getBlockHash(previousBlock);
-          
+
           // const currentHeader = await api.rpc.chain.getHeader(currentHash);
           // const previousHeader = await api.rpc.chain.getHeader(previousHash);
-          
+
           // Note: This is a simplified calculation. Real block time would need timestamps
           // from the block data, which might not be available in the header
           averageBlockTime = 6; // Using default for now
@@ -147,7 +162,10 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
         }
       } catch (e) {
         // Fallback to existing calculation
-        totalTransactions = blocks.reduce((sum, block) => sum + (block.extrinsics || 0), 0);
+        totalTransactions = blocks.reduce(
+          (sum, block) => sum + (block.extrinsics || 0),
+          0
+        );
       }
 
       // Get real hashrate (this would require additional API calls to get difficulty)
@@ -166,13 +184,13 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
         // Fallback to mock data
         networkHashrate = Math.floor(Math.random() * 1000) + 500;
       }
-      
+
       setNetworkStats({
         totalBlocks: header.number.toNumber(),
         totalTransactions,
         activeValidators,
         networkHashrate,
-        averageBlockTime
+        averageBlockTime,
       });
     } catch (error) {
       console.error("Failed to update network stats:", error);
@@ -189,14 +207,14 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
       const randomNumber = Math.floor(Math.random() * latest) + 1;
       const hash = await api.rpc.chain.getBlockHash(randomNumber);
       const header = await api.rpc.chain.getHeader(hash);
-      
+
       setRandomBlock({
         number: randomNumber,
         hash: hash.toHex(),
         parentHash: header.parentHash.toHex(),
         timestamp: Date.now(),
         extrinsics: Math.floor(Math.random() * 10) + 1,
-        events: Math.floor(Math.random() * 20) + 5
+        events: Math.floor(Math.random() * 20) + 5,
       });
     } catch (e) {
       setRandomBlock(null);
@@ -206,33 +224,61 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
 
   // Memoized toggleFavorite function
   const toggleFavorite = useCallback((hash: string) => {
-    setFavorites(prev => 
-      prev.includes(hash) 
-        ? prev.filter(h => h !== hash)
-        : [...prev, hash]
+    setFavorites((prev) =>
+      prev.includes(hash) ? prev.filter((h) => h !== hash) : [...prev, hash]
     );
   }, []);
 
   // Memoized removeFavorite function
   const removeFavorite = useCallback((hash: string) => {
-    setFavorites(prev => prev.filter(h => h !== hash));
+    setFavorites((prev) => prev.filter((h) => h !== hash));
   }, []);
 
   // Memoized handleThemeChange function
-  const handleThemeChange = useCallback((newTheme: Theme) => {
-    setTheme(newTheme);
-    onThemeChange(newTheme);
-  }, [onThemeChange]);
+  const handleThemeChange = useCallback(
+    (newTheme: Theme) => {
+      setTheme(newTheme);
+      onThemeChange(newTheme);
+    },
+    [onThemeChange]
+  );
 
   // Memoized quickActions array
-  const quickActions: QuickAction[] = useMemo(() => [
-    { icon: <Globe className="h-4 w-4" />, label: "Explore Network", action: () => setSelectedTab("explore") },
-    { icon: <Search className="h-4 w-4" />, label: "Search Blocks", action: () => setSelectedTab("search") },
-    { icon: <Users className="h-4 w-4" />, label: "View Validators", action: () => setSelectedTab("validators") },
-    { icon: <Zap className="h-4 w-4" />, label: "Chain Surf", action: surfTheChain },
-    { icon: <BarChart3 className="h-4 w-4" />, label: "Analytics", action: () => setSelectedTab("analytics") },
-    { icon: <Settings className="h-4 w-4" />, label: "Settings", action: () => setSelectedTab("settings") }
-  ], [surfTheChain]);
+  const quickActions: QuickAction[] = useMemo(
+    () => [
+      {
+        icon: <Globe className="h-4 w-4" />,
+        label: "Explore Network",
+        action: () => setSelectedTab("explore"),
+      },
+      {
+        icon: <Search className="h-4 w-4" />,
+        label: "Search Blocks",
+        action: () => setSelectedTab("search"),
+      },
+      {
+        icon: <Users className="h-4 w-4" />,
+        label: "View Validators",
+        action: () => setSelectedTab("validators"),
+      },
+      {
+        icon: <Zap className="h-4 w-4" />,
+        label: "Chain Surf",
+        action: surfTheChain,
+      },
+      {
+        icon: <BarChart3 className="h-4 w-4" />,
+        label: "Analytics",
+        action: () => setSelectedTab("analytics"),
+      },
+      {
+        icon: <Settings className="h-4 w-4" />,
+        label: "Settings",
+        action: () => setSelectedTab("settings"),
+      },
+    ],
+    [surfTheChain]
+  );
 
   // Memoized handleSearch function
   const handleSearch = useCallback(() => {
@@ -242,9 +288,15 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
 
   // Memoized currentTheme
   const currentTheme = useMemo(() => theme, [theme]);
-  
+
   return (
-    <div className={`min-h-screen ${RETRO_GRADIENTS[currentTheme]} retro-bg transition-all duration-1000 ${currentTheme === "monochrome" ? "monochrome" : ""}`}>
+    <div
+      className={`min-h-screen ${
+        RETRO_GRADIENTS[currentTheme]
+      } retro-bg transition-all duration-1000 ${
+        currentTheme === "monochrome" ? "monochrome" : ""
+      }`}
+    >
       <div className="fade-in-up-stagger fade-in-up-stagger-1 mb-8">
         <Header
           apiStatus={apiStatus}
@@ -283,4 +335,4 @@ export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomePr
       </div>
     </div>
   );
-} 
+}

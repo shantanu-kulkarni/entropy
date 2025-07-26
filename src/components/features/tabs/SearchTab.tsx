@@ -19,7 +19,7 @@ interface SearchResult {
   data: any;
 }
 
-export const SearchTab = memo(function SearchTab({ searchQuery, onSearchQueryChange, onSearch, api }: SearchTabProps) {
+export const SearchTab = memo(function SearchTab({ searchQuery, onSearchQueryChange, api }: SearchTabProps) {
   const [searchType, setSearchType] = useState<string>("all");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);

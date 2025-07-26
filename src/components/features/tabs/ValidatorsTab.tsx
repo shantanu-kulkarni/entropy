@@ -20,7 +20,8 @@ export function ValidatorsTab({ networkStats }: ValidatorsTabProps) {
         <div className="text-center py-8">
           <Users className="h-12 w-12 text-purple-400 mx-auto mb-4" />
           <p className="text-gray-600 font-mono">
-            {networkStats.activeValidators} active validators securing the network
+            {networkStats.activeValidators} active validators securing the
+            network
           </p>
           <Progress value={75} className="mt-4" />
           <p className="text-sm text-gray-500 font-mono mt-2">
@@ -30,4 +31,4 @@ export function ValidatorsTab({ networkStats }: ValidatorsTabProps) {
       </CardContent>
     </Card>
   );
-} 
+}

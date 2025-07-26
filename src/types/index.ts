@@ -23,4 +23,4 @@ export interface QuickAction {
 
 export type Theme = "monochrome" | "colored";
 
-export type ApiStatus = "connecting" | "connected" | "error"; 
+export type ApiStatus = "connecting" | "connected" | "error";

@@ -9,7 +9,11 @@ interface FooterProps {
 
 export const Footer = memo(function Footer({ theme }: FooterProps) {
   return (
-    <footer className={`border-t retro-card mt-12 ${theme === "monochrome" ? "border-gray-300" : "border-green-300"}`}>
+    <footer
+      className={`border-t retro-card mt-12 ${
+        theme === "monochrome" ? "border-gray-300" : "border-green-300"
+      }`}
+    >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -29,4 +33,4 @@ export const Footer = memo(function Footer({ theme }: FooterProps) {
       </div>
     </footer>
   );
-}); 
+});

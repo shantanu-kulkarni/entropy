@@ -6,7 +6,7 @@ import { ValidatorsTab } from "./tabs/ValidatorsTab";
 import { AnalyticsTab } from "./tabs/AnalyticsTab";
 import { FavoritesTab } from "./tabs/FavoritesTab";
 import { SettingsTab } from "./tabs/SettingsTab";
-import { BlockData, NetworkStats, QuickAction, Theme } from "@/types";
+import { BlockData, NetworkStats, Theme } from "@/types";
 
 interface MainTabsProps {
   selectedTab: string;

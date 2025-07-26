@@ -140,7 +140,7 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
               ease: "power2.inOut",
               onComplete: () => {
                 setFullyCovered(true);
-              }
+              },
             });
           }
         });
@@ -158,14 +158,16 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
     setButtonClicked(true);
   };
 
-
   // Add state for button block assembly
   const [buttonBlocksAssembled, setButtonBlocksAssembled] = useState(false);
   const buttonAssembleRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Initialize refs array when component mounts
   useEffect(() => {
-    buttonAssembleRefs.current = Array.from({ length: 'Leverage Entropy'.length }, () => null);
+    buttonAssembleRefs.current = Array.from(
+      { length: "Leverage Entropy".length },
+      () => null
+    );
   }, []);
 
   // Animate button blocks assembling in
@@ -183,12 +185,12 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
               scale: 1,
               duration: 0.4,
               delay: i * 0.06 + 0.2,
-              ease: 'power2.out',
+              ease: "power2.out",
               onComplete: () => {
-                if (i === 'Leverage Entropy'.length - 1) {
+                if (i === "Leverage Entropy".length - 1) {
                   setButtonBlocksAssembled(true);
                 }
-              }
+              },
             }
           );
         }
@@ -210,20 +212,20 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
   useEffect(() => {
     if (buttonClicked && !cubeTransitionStarted) {
       setCubeTransitionStarted(true);
-      
+
       // Single transition sequence with proper timing
       const transitionSequence = async () => {
         setFadeOut(true); // fade out immediately
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 800));
         setShowCube(true); // show cube
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         setCubePulse(true); // start pulse
-        await new Promise(resolve => setTimeout(resolve, 1100));
+        await new Promise((resolve) => setTimeout(resolve, 1100));
         setCubeExpand(true); // expand cube
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         if (onSplashEnd) onSplashEnd(); // complete transition
       };
-      
+
       transitionSequence();
     }
   }, [buttonClicked, onSplashEnd, cubeTransitionStarted]);
@@ -231,28 +233,47 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
   // Animation styles
   const phraseAnimStyle = {
     opacity: show && !animatingOut ? 1 : 0,
-    transform: show && !animatingOut ? 'translateY(0)' : 'translateY(20px)',
-    transition: 'opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1)',
-    display: 'inline-block',
+    transform: show && !animatingOut ? "translateY(0)" : "translateY(20px)",
+    transition:
+      "opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1)",
+    display: "inline-block",
   };
 
   // Fade-in style
 
   return (
-    <div className={`fixed inset-0 flex flex-col items-center justify-center splash-screen z-50 min-h-screen min-w-full`} style={{ background: transitioning ? '#000' : undefined }}>
-      <div style={{ opacity: fadeOut ? 0 : 1, transition: 'opacity 0.7s cubic-bezier(0.4,0,0.2,1)' }}>
+    <div
+      className={`fixed inset-0 flex flex-col items-center justify-center splash-screen z-50 min-h-screen min-w-full`}
+      style={{ background: transitioning ? "#000" : undefined }}
+    >
+      <div
+        style={{
+          opacity: fadeOut ? 0 : 1,
+          transition: "opacity 0.7s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
         <div
           ref={containerRef}
           className="relative flex flex-col items-center justify-center"
-          style={{ width: TITLE_WIDTH, height: TITLE_HEIGHT * 2, marginTop: 40 }}
+          style={{
+            width: TITLE_WIDTH,
+            height: TITLE_HEIGHT * 2,
+            marginTop: 40,
+          }}
         >
           {/* Animated blocks absolutely positioned over the title */}
-          <div className="absolute left-0 top-0 w-full h-full pointer-events-none" style={{ zIndex: 2 }}>
-            <div className="flex" style={{ width: TITLE_WIDTH, height: TITLE_HEIGHT }}>
+          <div
+            className="absolute left-0 top-0 w-full h-full pointer-events-none"
+            style={{ zIndex: 2 }}
+          >
+            <div
+              className="flex"
+              style={{ width: TITLE_WIDTH, height: TITLE_HEIGHT }}
+            >
               {[...Array(BLOCK_COUNT)].map((_, i) => (
                 <div
                   key={i}
-                  ref={el => (blockRefs.current[i] = el)}
+                  ref={(el) => (blockRefs.current[i] = el)}
                   style={{
                     width: BLOCK_WIDTH,
                     height: BLOCK_HEIGHT,
@@ -261,7 +282,7 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
                     borderRadius: 10,
                     position: "relative",
                     zIndex: 2,
-                    transition: blocksGrow ? 'none' : undefined
+                    transition: blocksGrow ? "none" : undefined,
                   }}
                 />
               ))}
@@ -270,7 +291,11 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
           {/* Title with blend mode */}
           <div
             className="w-full flex items-center justify-center"
-            style={{ height: TITLE_HEIGHT * 2, opacity: fullyCovered ? 1 : 1, transition: 'opacity 0.5s' }}
+            style={{
+              height: TITLE_HEIGHT * 2,
+              opacity: fullyCovered ? 1 : 1,
+              transition: "opacity 0.5s",
+            }}
           >
             <span
               style={{
@@ -290,7 +315,11 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
           {/* 'surf the wave' below the blocks */}
           <div
             className="w-full flex flex-col items-center justify-center"
-            style={{ marginTop: 16, opacity: blocksFallen ? 1 : 0, transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)' }}
+            style={{
+              marginTop: 16,
+              opacity: blocksFallen ? 1 : 0,
+              transition: "opacity 0.5s cubic-bezier(0.4,0,0.2,1)",
+            }}
           >
             <span
               style={{
@@ -302,81 +331,83 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
                 zIndex: 3,
                 position: "relative",
                 userSelect: "none",
-                background: 'none',
+                background: "none",
                 //transition: 'color 0.5s, mix-blend-mode 0.5s'
-                transform: blocksFallen ? 'translateY(0) color 0.5s, mix-blend-mode 0.5s' : 'translateY(20px) color 0.5s, mix-blend-mode 0.5s',
-              transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1)' 
+                transform: blocksFallen
+                  ? "translateY(0) color 0.5s, mix-blend-mode 0.5s"
+                  : "translateY(20px) color 0.5s, mix-blend-mode 0.5s",
+                transition:
+                  "opacity 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1)",
               }}
             >
               surf the chain!
             </span>
           </div>
-                  {/* Leverage Entropy button */}
-        {fullyCovered && !buttonClicked && (
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: `calc(${TITLE_HEIGHT * 2 + 56}px)`,
-              display: 'flex',
-              justifyContent: 'center',
-              zIndex: 20
-            }}
-          >
-            <div 
-              style={{ 
-                display: 'flex', 
-                position: 'relative', 
-                background: '#fff', 
-                borderRadius: 12, 
-                boxShadow: '0 2px 16px 0 #0006',
-                cursor: 'pointer',
-                transition: 'transform 0.18s cubic-bezier(0.4,0,0.2,1)',
-                transform: 'scale(1)',
-              }}
-              onClick={handleButtonClick}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = 'scale(1.08)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = 'scale(1)';
+          {/* Leverage Entropy button */}
+          {fullyCovered && !buttonClicked && (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: `calc(${TITLE_HEIGHT * 2 + 56}px)`,
+                display: "flex",
+                justifyContent: "center",
+                zIndex: 20,
               }}
             >
-              {[...'Leverage Entropy'].map((char, i, arr) => (
-                <div
-                  key={i}
-                  ref={el => (buttonAssembleRefs.current[i] = el)}
-                  style={{
-                    width: 24,
-                    height: 48,
-                    marginRight: 0,
-                    background: '#fff',
-                    borderTopLeftRadius: i === 0 ? 12 : 0,
-                    borderBottomLeftRadius: i === 0 ? 12 : 0,
-                    borderTopRightRadius: i === arr.length - 1 ? 12 : 0,
-                    borderBottomRightRadius: i === arr.length - 1 ? 12 : 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: '"Press Start 2P", monospace',
-                    fontSize: 18,
-                    color: '#000',
-                    boxShadow: 'none',
-                    opacity: 0,
-                    transform: 'translateY(40px) scale(0.7)',
-                    transition: 'none',
-                    zIndex: 31,
-                    position: 'relative',
-                  }}
-                >
-                  {char !== ' ' ? char : '\u00A0'}
-                </div>
-              ))}
+              <div
+                style={{
+                  display: "flex",
+                  position: "relative",
+                  background: "#fff",
+                  borderRadius: 12,
+                  boxShadow: "0 2px 16px 0 #0006",
+                  cursor: "pointer",
+                  transition: "transform 0.18s cubic-bezier(0.4,0,0.2,1)",
+                  transform: "scale(1)",
+                }}
+                onClick={handleButtonClick}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "scale(1.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+              >
+                {[..."Leverage Entropy"].map((char, i, arr) => (
+                  <div
+                    key={i}
+                    ref={(el) => (buttonAssembleRefs.current[i] = el)}
+                    style={{
+                      width: 24,
+                      height: 48,
+                      marginRight: 0,
+                      background: "#fff",
+                      borderTopLeftRadius: i === 0 ? 12 : 0,
+                      borderBottomLeftRadius: i === 0 ? 12 : 0,
+                      borderTopRightRadius: i === arr.length - 1 ? 12 : 0,
+                      borderBottomRightRadius: i === arr.length - 1 ? 12 : 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontFamily: '"Press Start 2P", monospace',
+                      fontSize: 18,
+                      color: "#000",
+                      boxShadow: "none",
+                      opacity: 0,
+                      transform: "translateY(40px) scale(0.7)",
+                      transition: "none",
+                      zIndex: 31,
+                      position: "relative",
+                    }}
+                  >
+                    {char !== " " ? char : "\u00A0"}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
+          )}
         </div>
         {/* Bottom right enhanced animated phrase */}
         {blocksFallen && (
@@ -397,22 +428,27 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
               textAlign: "right",
               userSelect: "none",
               opacity: blocksGrow ? 0 : 1,
-              transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1)'
+              transition: "opacity 0.5s cubic-bezier(0.4,0,0.2,1)",
             }}
           >
             <span style={phraseAnimStyle}>
               {phrases[phraseIdx].base}
               <span>
                 {typedEnd}
-                {showCursor && typedEnd.length < phrases[phraseIdx].end.length && (
-                  <span style={{
-                    display: 'inline-block',
-                    width: '1ch',
-                    animation: 'robotic-blink 0.7s steps(1) infinite',
-                    color: '#0ff',
-                    textShadow: '0 0 4px #0ff',
-                  }}>|</span>
-                )}
+                {showCursor &&
+                  typedEnd.length < phrases[phraseIdx].end.length && (
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: "1ch",
+                        animation: "robotic-blink 0.7s steps(1) infinite",
+                        color: "#0ff",
+                        textShadow: "0 0 4px #0ff",
+                      }}
+                    >
+                      |
+                    </span>
+                  )}
               </span>
             </span>
           </div>
@@ -420,22 +456,36 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
       </div>
       {/* Cube transition animation */}
       {showCube && (
-        <div style={{
-          position: 'fixed', left: 0, right: 0, top: 0, bottom: 0, zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
-          background: '#000',
-        }}>
-          <div style={{
-            width: cubeExpand ? '100vw' : 80,
-            height: cubeExpand ? '100vh' : 80,
-            background: '#fff',
-            borderRadius: cubeExpand ? 0 : 16,
-            boxShadow: cubeExpand 
-              ? 'none' 
-              : '0 0 40px 10px #22c55e, 0 0 80px 20px #22c55e44',
-            transition: 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            animation: cubePulse ? 'smoothBlink 0.8s ease-in-out infinite' : 'none',
-          }} />
+        <div
+          style={{
+            position: "fixed",
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+            background: "#000",
+          }}
+        >
+          <div
+            style={{
+              width: cubeExpand ? "100vw" : 80,
+              height: cubeExpand ? "100vh" : 80,
+              background: "#fff",
+              borderRadius: cubeExpand ? 0 : 16,
+              boxShadow: cubeExpand
+                ? "none"
+                : "0 0 40px 10px #22c55e, 0 0 80px 20px #22c55e44",
+              transition: "all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+              animation: cubePulse
+                ? "smoothBlink 0.8s ease-in-out infinite"
+                : "none",
+            }}
+          />
         </div>
       )}
       <style>{`
@@ -450,4 +500,4 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
       `}</style>
     </div>
   );
-} 
+}

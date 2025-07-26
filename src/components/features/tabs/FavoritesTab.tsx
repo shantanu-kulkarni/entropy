@@ -7,7 +7,10 @@ interface FavoritesTabProps {
   onRemoveFavorite: (hash: string) => void;
 }
 
-export function FavoritesTab({ favorites, onRemoveFavorite }: FavoritesTabProps) {
+export function FavoritesTab({
+  favorites,
+  onRemoveFavorite,
+}: FavoritesTabProps) {
   return (
     <Card className="retro-card">
       <CardHeader>
@@ -24,9 +27,7 @@ export function FavoritesTab({ favorites, onRemoveFavorite }: FavoritesTabProps)
                 key={hash}
                 className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200"
               >
-                <div className="font-mono text-sm">
-                  {hash.slice(0, 32)}...
-                </div>
+                <div className="font-mono text-sm">{hash.slice(0, 32)}...</div>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -49,4 +50,4 @@ export function FavoritesTab({ favorites, onRemoveFavorite }: FavoritesTabProps)
       </CardContent>
     </Card>
   );
-} 
+}

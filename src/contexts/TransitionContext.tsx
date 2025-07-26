@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from "react";
 
 interface TransitionContextType {
   isTransitioning: boolean;
@@ -7,7 +7,9 @@ interface TransitionContextType {
   endTransition: () => void;
 }
 
-const TransitionContext = createContext<TransitionContextType | undefined>(undefined);
+const TransitionContext = createContext<TransitionContextType | undefined>(
+  undefined
+);
 
 export function TransitionProvider({ children }: { children: ReactNode }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -23,7 +25,14 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <TransitionContext.Provider value={{ isTransitioning, transitionTheme, startTransition, endTransition }}>
+    <TransitionContext.Provider
+      value={{
+        isTransitioning,
+        transitionTheme,
+        startTransition,
+        endTransition,
+      }}
+    >
       {children}
     </TransitionContext.Provider>
   );
@@ -32,7 +41,7 @@ export function TransitionProvider({ children }: { children: ReactNode }) {
 export function useTransition() {
   const context = useContext(TransitionContext);
   if (context === undefined) {
-    throw new Error('useTransition must be used within a TransitionProvider');
+    throw new Error("useTransition must be used within a TransitionProvider");
   }
   return context;
-} 
+}

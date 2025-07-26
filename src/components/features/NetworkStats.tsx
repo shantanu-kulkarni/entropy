@@ -1,11 +1,11 @@
 import { memo, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NetworkStats as NetworkStatsType } from "@/types";
-import { 
-  NETWORK_STATS_ICONS, 
-  NETWORK_STATS_LABELS, 
-  NETWORK_STATS_COLORS, 
-  NETWORK_STATS_GLOWS 
+import {
+  NETWORK_STATS_ICONS,
+  NETWORK_STATS_LABELS,
+  NETWORK_STATS_COLORS,
+  NETWORK_STATS_GLOWS,
 } from "@/constants";
 
 interface NetworkStatsProps {
@@ -13,14 +13,28 @@ interface NetworkStatsProps {
   theme: string;
 }
 
-export const NetworkStats = memo(function NetworkStats({ stats }: NetworkStatsProps) {
-  const statItems = useMemo(() => [
-    { key: 'totalBlocks', value: stats.totalBlocks, suffix: '' },
-    { key: 'totalTransactions', value: stats.totalTransactions, suffix: '' },
-    { key: 'activeValidators', value: stats.activeValidators, suffix: '' },
-    { key: 'networkHashrate', value: stats.networkHashrate, suffix: ' H/s' },
-    { key: 'averageBlockTime', value: stats.averageBlockTime, suffix: 's' }
-  ] as const, [stats]);
+export const NetworkStats = memo(function NetworkStats({
+  stats,
+}: NetworkStatsProps) {
+  const statItems = useMemo(
+    () =>
+      [
+        { key: "totalBlocks", value: stats.totalBlocks, suffix: "" },
+        {
+          key: "totalTransactions",
+          value: stats.totalTransactions,
+          suffix: "",
+        },
+        { key: "activeValidators", value: stats.activeValidators, suffix: "" },
+        {
+          key: "networkHashrate",
+          value: stats.networkHashrate,
+          suffix: " H/s",
+        },
+        { key: "averageBlockTime", value: stats.averageBlockTime, suffix: "s" },
+      ] as const,
+    [stats]
+  );
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -29,7 +43,7 @@ export const NetworkStats = memo(function NetworkStats({ stats }: NetworkStatsPr
         const label = NETWORK_STATS_LABELS[key];
         const colorClass = NETWORK_STATS_COLORS[key];
         const glowClass = NETWORK_STATS_GLOWS[key];
-        
+
         return (
           <Card key={key} className={`retro-card ${glowClass} retro-hover`}>
             <CardHeader className="pb-2">
@@ -40,7 +54,8 @@ export const NetworkStats = memo(function NetworkStats({ stats }: NetworkStatsPr
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${colorClass}`}>
-                {value.toLocaleString()}{suffix}
+                {value.toLocaleString()}
+                {suffix}
               </div>
             </CardContent>
           </Card>
@@ -48,4 +63,4 @@ export const NetworkStats = memo(function NetworkStats({ stats }: NetworkStatsPr
       })}
     </div>
   );
-}); 
+});

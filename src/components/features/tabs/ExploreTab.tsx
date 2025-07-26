@@ -15,13 +15,13 @@ interface ExploreTabProps {
   onToggleFavorite: (hash: string) => void;
 }
 
-export function ExploreTab({ 
-  blocks, 
-  randomBlock, 
-  surfing, 
-  favorites, 
-  onSurfChain, 
-  onToggleFavorite 
+export function ExploreTab({
+  blocks,
+  randomBlock,
+  surfing,
+  favorites,
+  onSurfChain,
+  onToggleFavorite,
 }: ExploreTabProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -37,7 +37,11 @@ export function ExploreTab({
               disabled={surfing}
               className="font-mono"
             >
-              {surfing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+              {surfing ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Zap className="h-4 w-4" />
+              )}
               {surfing ? "Surfing..." : "Surf Chain"}
             </Button>
           </CardTitle>
@@ -149,4 +153,4 @@ export function ExploreTab({
       </Card>
     </div>
   );
-} 
+}

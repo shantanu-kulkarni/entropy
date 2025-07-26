@@ -9,7 +9,10 @@ interface QuickActionsProps {
   theme: Theme;
 }
 
-export const QuickActions = memo(function QuickActions({ actions, theme }: QuickActionsProps) {
+export const QuickActions = memo(function QuickActions({
+  actions,
+  theme,
+}: QuickActionsProps) {
   const handleActionClick = useCallback((action: QuickAction) => {
     action.action();
   }, []);
@@ -29,7 +32,9 @@ export const QuickActions = memo(function QuickActions({ actions, theme }: Quick
               key={index}
               variant="outline"
               className={`h-20 flex flex-col items-center justify-center space-y-2 font-mono text-xs retro-button retro-hover ${
-                theme === "monochrome" ? "border-gray-300 hover:bg-gray-50" : "border-green-300 hover:bg-green-50"
+                theme === "monochrome"
+                  ? "border-gray-300 hover:bg-gray-50"
+                  : "border-green-300 hover:bg-green-50"
               }`}
               onClick={() => handleActionClick(action)}
             >
@@ -41,4 +46,4 @@ export const QuickActions = memo(function QuickActions({ actions, theme }: Quick
       </CardContent>
     </Card>
   );
-}); 
+});
