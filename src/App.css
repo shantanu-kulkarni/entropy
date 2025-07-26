@@ -1,0 +1,59 @@
+
+.homepage-root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 47.4% 11.2%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 47.4% 11.2%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 47.4% 11.2%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
+}
+
+:root {
+  /* shadcn/ui default variables (leave empty or set to shadcn defaults if different) */
+}
+
+/* shadcn/ui base styles */
+* {
+  border-color: hsl(var(--border));
+}
+input, textarea, select, button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border-radius: var(--radius);
+  border-width: 1px;
+  border-style: solid;
+  border-color: hsl(var(--input));
+  outline: none;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+input:focus, textarea:focus, select:focus, button:focus {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', 'Press Start 2P', 'Roboto Mono', ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+@import "tailwindcss/preflight";
+@tailwind utilities;
+
