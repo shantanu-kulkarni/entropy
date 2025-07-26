@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,11 @@ interface QuickActionsProps {
   theme: Theme;
 }
 
-export function QuickActions({ actions, theme }: QuickActionsProps) {
+export const QuickActions = memo(function QuickActions({ actions, theme }: QuickActionsProps) {
+  const handleActionClick = useCallback((action: QuickAction) => {
+    action.action();
+  }, []);
+
   return (
     <Card className="retro-card glow-green mb-8">
       <CardHeader>
@@ -26,7 +31,7 @@ export function QuickActions({ actions, theme }: QuickActionsProps) {
               className={`h-20 flex flex-col items-center justify-center space-y-2 font-mono text-xs retro-button retro-hover ${
                 theme === "monochrome" ? "border-gray-300 hover:bg-gray-50" : "border-green-300 hover:bg-green-50"
               }`}
-              onClick={action.action}
+              onClick={() => handleActionClick(action)}
             >
               {action.icon}
               <span>{action.label}</span>
@@ -36,4 +41,4 @@ export function QuickActions({ actions, theme }: QuickActionsProps) {
       </CardContent>
     </Card>
   );
-} 
+}); 

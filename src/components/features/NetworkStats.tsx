@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NetworkStats as NetworkStatsType } from "@/types";
 import { 
@@ -12,14 +13,14 @@ interface NetworkStatsProps {
   theme: string;
 }
 
-export function NetworkStats({ stats }: NetworkStatsProps) {
-  const statItems = [
+export const NetworkStats = memo(function NetworkStats({ stats }: NetworkStatsProps) {
+  const statItems = useMemo(() => [
     { key: 'totalBlocks', value: stats.totalBlocks, suffix: '' },
     { key: 'totalTransactions', value: stats.totalTransactions, suffix: '' },
     { key: 'activeValidators', value: stats.activeValidators, suffix: '' },
     { key: 'networkHashrate', value: stats.networkHashrate, suffix: ' H/s' },
     { key: 'averageBlockTime', value: stats.averageBlockTime, suffix: 's' }
-  ] as const;
+  ] as const, [stats]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -47,4 +48,4 @@ export function NetworkStats({ stats }: NetworkStatsProps) {
       })}
     </div>
   );
-} 
+}); 

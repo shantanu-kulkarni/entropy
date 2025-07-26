@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { 
   Globe, 
@@ -18,11 +18,13 @@ import { RETRO_GRADIENTS, ENTROPY_ENDPOINT, MAX_BLOCKS_DISPLAY } from "@/constan
 
 interface HomeProps {
   onThemeChange: (theme: Theme) => void;
+  preloadedApi?: ApiPromise | null;
+  preloadedApiStatus?: ApiStatus;
 }
 
-export function Home({ onThemeChange }: HomeProps) {
-  const [apiStatus, setApiStatus] = useState<ApiStatus>("connecting");
-  const [api, setApi] = useState<ApiPromise | null>(null);
+export function Home({ onThemeChange, preloadedApi, preloadedApiStatus }: HomeProps) {
+  const [apiStatus, setApiStatus] = useState<ApiStatus>(preloadedApiStatus || "connecting");
+  const [api, setApi] = useState<ApiPromise | null>(preloadedApi || null);
   const [blocks, setBlocks] = useState<BlockData[]>([]);
   const [randomBlock, setRandomBlock] = useState<BlockData | null>(null);
   const [surfing, setSurfing] = useState(false);
@@ -38,8 +40,14 @@ export function Home({ onThemeChange }: HomeProps) {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [theme, setTheme] = useState<Theme>("monochrome");
 
-  // Connect to Entropy testnet
+  // Connect to Entropy testnet (only if not preloaded)
   useEffect(() => {
+    if (preloadedApi) {
+      setApi(preloadedApi);
+      setApiStatus(preloadedApiStatus || "connected");
+      return;
+    }
+
     const provider = new WsProvider(ENTROPY_ENDPOINT);
     ApiPromise.create({ provider })
       .then((api) => {
@@ -53,7 +61,7 @@ export function Home({ onThemeChange }: HomeProps) {
     return () => {
       provider.disconnect();
     };
-  }, []);
+  }, [preloadedApi, preloadedApiStatus]);
 
   // Subscribe to new blocks
   useEffect(() => {
@@ -87,7 +95,8 @@ export function Home({ onThemeChange }: HomeProps) {
     return () => clearInterval(interval);
   }, [api]);
 
-  const updateNetworkStats = async () => {
+  // Memoized updateNetworkStats function
+  const updateNetworkStats = useCallback(async () => {
     if (!api) return;
     
     try {
@@ -168,9 +177,10 @@ export function Home({ onThemeChange }: HomeProps) {
     } catch (error) {
       console.error("Failed to update network stats:", error);
     }
-  };
+  }, [api, blocks]);
 
-  const surfTheChain = async () => {
+  // Memoized surfTheChain function
+  const surfTheChain = useCallback(async () => {
     if (!api) return;
     setSurfing(true);
     try {
@@ -192,81 +202,82 @@ export function Home({ onThemeChange }: HomeProps) {
       setRandomBlock(null);
     }
     setSurfing(false);
-  };
+  }, [api]);
 
-  const toggleFavorite = (hash: string) => {
+  // Memoized toggleFavorite function
+  const toggleFavorite = useCallback((hash: string) => {
     setFavorites(prev => 
       prev.includes(hash) 
         ? prev.filter(h => h !== hash)
         : [...prev, hash]
     );
-  };
+  }, []);
 
-  const removeFavorite = (hash: string) => {
+  // Memoized removeFavorite function
+  const removeFavorite = useCallback((hash: string) => {
     setFavorites(prev => prev.filter(h => h !== hash));
-  };
+  }, []);
 
-  const handleThemeChange = (newTheme: Theme) => {
+  // Memoized handleThemeChange function
+  const handleThemeChange = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
     onThemeChange(newTheme);
-  };
+  }, [onThemeChange]);
 
-  const quickActions: QuickAction[] = [
+  // Memoized quickActions array
+  const quickActions: QuickAction[] = useMemo(() => [
     { icon: <Globe className="h-4 w-4" />, label: "Explore Network", action: () => setSelectedTab("explore") },
     { icon: <Search className="h-4 w-4" />, label: "Search Blocks", action: () => setSelectedTab("search") },
     { icon: <Users className="h-4 w-4" />, label: "View Validators", action: () => setSelectedTab("validators") },
     { icon: <Zap className="h-4 w-4" />, label: "Chain Surf", action: surfTheChain },
     { icon: <BarChart3 className="h-4 w-4" />, label: "Analytics", action: () => setSelectedTab("analytics") },
     { icon: <Settings className="h-4 w-4" />, label: "Settings", action: () => setSelectedTab("settings") }
-  ];
+  ], [surfTheChain]);
 
-  const handleSearch = () => {
+  // Memoized handleSearch function
+  const handleSearch = useCallback(() => {
     // TODO: Implement search functionality
     console.log("Searching for:", searchQuery);
-  };
+  }, [searchQuery]);
 
-  // Use the actual selected theme
-  const currentTheme = theme;
+  // Memoized currentTheme
+  const currentTheme = useMemo(() => theme, [theme]);
   
   return (
     <div className={`min-h-screen ${RETRO_GRADIENTS[currentTheme]} retro-bg transition-all duration-1000 ${currentTheme === "monochrome" ? "monochrome" : ""}`}>
-      <div className="fade-in-up-stagger fade-in-up-stagger-1">
+      <div className="fade-in-up-stagger fade-in-up-stagger-1 mb-8">
         <Header
           apiStatus={apiStatus}
           theme={currentTheme}
           onThemeChange={handleThemeChange}
         />
       </div>
-
-      <main className="container mx-auto px-4 py-6 fade-in-up-stagger fade-in-up-stagger-2">
-        <div className="fade-in-up-stagger fade-in-up-stagger-2">
-          <NetworkStats stats={networkStats} theme={currentTheme} />
-        </div>
-        <div className="fade-in-up-stagger fade-in-up-stagger-3">
-          <QuickActions actions={quickActions} theme={currentTheme} />
-        </div>
-        <div className="fade-in-up-stagger fade-in-up-stagger-4">
-          <MainTabs
-            selectedTab={selectedTab}
-            onTabChange={setSelectedTab}
-            blocks={blocks}
-            randomBlock={randomBlock}
-            surfing={surfing}
-            favorites={favorites}
-            theme={currentTheme}
-            networkStats={networkStats}
-            searchQuery={searchQuery}
-            api={api}
-            onSurfChain={surfTheChain}
-            onToggleFavorite={toggleFavorite}
-            onRemoveFavorite={removeFavorite}
-            onSearchQueryChange={setSearchQuery}
-            onSearch={handleSearch}
-            onThemeChange={handleThemeChange}
-          />
-        </div>
-      </main>
-
+      <div className="fade-in-up-stagger fade-in-up-stagger-2 px-4">
+        <NetworkStats stats={networkStats} theme={currentTheme} />
+      </div>
+      <div className="fade-in-up-stagger fade-in-up-stagger-3 px-4">
+        <QuickActions actions={quickActions} theme={currentTheme} />
+      </div>
+      <div className="fade-in-up-stagger fade-in-up-stagger-4 px-4">
+        <MainTabs
+          selectedTab={selectedTab}
+          onTabChange={setSelectedTab}
+          blocks={blocks}
+          randomBlock={randomBlock}
+          surfing={surfing}
+          favorites={favorites}
+          theme={currentTheme}
+          networkStats={networkStats}
+          searchQuery={searchQuery}
+          api={api}
+          onSurfChain={surfTheChain}
+          onToggleFavorite={toggleFavorite}
+          onRemoveFavorite={removeFavorite}
+          onSearchQueryChange={setSearchQuery}
+          onSearch={handleSearch}
+          onThemeChange={handleThemeChange}
+        />
+      </div>
       <div className="fade-in-up-stagger fade-in-up-stagger-5">
         <Footer theme={currentTheme} />
       </div>

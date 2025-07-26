@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExploreTab } from "./tabs/ExploreTab";
 import { SearchTab } from "./tabs/SearchTab";
@@ -5,7 +6,7 @@ import { ValidatorsTab } from "./tabs/ValidatorsTab";
 import { AnalyticsTab } from "./tabs/AnalyticsTab";
 import { FavoritesTab } from "./tabs/FavoritesTab";
 import { SettingsTab } from "./tabs/SettingsTab";
-import { BlockData, NetworkStats, Theme } from "@/types";
+import { BlockData, NetworkStats, QuickAction, Theme } from "@/types";
 
 interface MainTabsProps {
   selectedTab: string;
@@ -17,7 +18,7 @@ interface MainTabsProps {
   theme: Theme;
   networkStats: NetworkStats;
   searchQuery: string;
-  api: any; // Polkadot API instance
+  api: any;
   onSurfChain: () => void;
   onToggleFavorite: (hash: string) => void;
   onRemoveFavorite: (hash: string) => void;
@@ -26,7 +27,7 @@ interface MainTabsProps {
   onThemeChange: (theme: Theme) => void;
 }
 
-export function MainTabs({
+export const MainTabs = memo(function MainTabs({
   selectedTab,
   onTabChange,
   blocks,
@@ -44,8 +45,12 @@ export function MainTabs({
   onSearch,
   onThemeChange
 }: MainTabsProps) {
+  const handleTabChange = useCallback((value: string) => {
+    onTabChange(value);
+  }, [onTabChange]);
+
   return (
-    <Tabs value={selectedTab} onValueChange={onTabChange} className="space-y-6">
+    <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-6">
       <TabsList className="grid w-full grid-cols-6 retro-card">
         <TabsTrigger value="explore" className="font-mono">Explore</TabsTrigger>
         <TabsTrigger value="search" className="font-mono">Search</TabsTrigger>
@@ -99,4 +104,4 @@ export function MainTabs({
       </TabsContent>
     </Tabs>
   );
-} 
+}); 

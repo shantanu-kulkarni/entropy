@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Theme } from "@/types";
 import { ENTROPY_ENDPOINT } from "@/constants";
@@ -6,7 +7,7 @@ interface FooterProps {
   theme: Theme;
 }
 
-export function Footer({ theme }: FooterProps) {
+export const Footer = memo(function Footer({ theme }: FooterProps) {
   return (
     <footer className={`border-t retro-card mt-12 ${theme === "monochrome" ? "border-gray-300" : "border-green-300"}`}>
       <div className="container mx-auto px-4 py-4">
@@ -28,4 +29,4 @@ export function Footer({ theme }: FooterProps) {
       </div>
     </footer>
   );
-} 
+}); 

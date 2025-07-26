@@ -23,7 +23,7 @@ interface ChartData {
 export function AnalyticsTab({ api, networkStats }: AnalyticsTabProps) {
   const [blockProductionData, setBlockProductionData] = useState<ChartData | null>(null);
   const [transactionData, setTransactionData] = useState<ChartData | null>(null);
-  const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d'>('24h');
+  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
   const [isLoading, setIsLoading] = useState(true);
   const [analyticsStats, setAnalyticsStats] = useState({
     avgBlockTime: 0,
@@ -55,7 +55,22 @@ export function AnalyticsTab({ api, networkStats }: AnalyticsTabProps) {
 
       // Generate chart data based on real network activity with proper timeline
       const now = Date.now();
-      const hours = timeRange === '1h' ? 1 : timeRange === '24h' ? 24 : 168;
+      
+      // Determine number of data points and interval based on time range
+      let dataPoints: number;
+      let intervalMinutes: number;
+      
+      if (timeRange === '24h') {
+        dataPoints = 24; // 24 data points for 24 hours (every hour)
+        intervalMinutes = 60;
+      } else if (timeRange === '7d') {
+        dataPoints = 7; // 7 data points for 7 days (every day)
+        intervalMinutes = 1440; // 24 * 60 minutes
+      } else {
+        dataPoints = 30; // 30 data points for 30 days (every day)
+        intervalMinutes = 1440; // 24 * 60 minutes
+      }
+      
       const labels = [];
       const blockData = [];
       const txData = [];
@@ -63,25 +78,19 @@ export function AnalyticsTab({ api, networkStats }: AnalyticsTabProps) {
       // Use real block time to calculate realistic block production
       const blocksPerHour = Math.floor(3600 / realStats.avgBlockTime);
       
-      for (let i = hours; i >= 0; i--) {
-        const time = new Date(now - i * 60 * 60 * 1000);
+      for (let i = dataPoints; i >= 0; i--) {
+        const time = new Date(now - i * intervalMinutes * 60 * 1000);
         
         // Create proper time labels based on time range
         let timeLabel;
-        if (timeRange === '1h') {
-          timeLabel = time.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-          });
-        } else if (timeRange === '24h') {
+        if (timeRange === '24h') {
           timeLabel = time.toLocaleTimeString('en-US', { 
             hour: '2-digit', 
             minute: '2-digit',
             hour12: false 
           });
         } else {
-          // 7 days - show date and time
+          // 7 days and 30 days - show date and time
           timeLabel = time.toLocaleDateString('en-US', { 
             month: 'short', 
             day: 'numeric',
@@ -93,8 +102,8 @@ export function AnalyticsTab({ api, networkStats }: AnalyticsTabProps) {
         labels.push(timeLabel);
         
         // Use real data with some variation based on actual block time
-        const baseBlocks = blocksPerHour;
-        const baseTransactions = realStats.totalTransactions / hours;
+        const baseBlocks = blocksPerHour * (intervalMinutes / 60); // Adjust for interval
+        const baseTransactions = realStats.totalTransactions * (intervalMinutes / (timeRange === '24h' ? 1440 : timeRange === '7d' ? 10080 : 43200));
         
         // Add realistic variation based on network activity
         const timeVariation = 0.8 + Math.sin(i * 0.5) * 0.2; // Natural variation over time
@@ -158,7 +167,7 @@ export function AnalyticsTab({ api, networkStats }: AnalyticsTabProps) {
                   <div className="font-bold">{labels[index]}</div>
                   <div>{title}: {value}</div>
                   <div className="text-xs text-gray-500">
-                    {timeRange === '1h' ? 'Last hour' : timeRange === '24h' ? 'Last 24 hours' : 'Last 7 days'}
+                    {timeRange === '24h' ? 'Last 24 hours' : timeRange === '7d' ? 'Last 7 days' : 'Last 30 days'}
                   </div>
                 </div>
               </TooltipContent>
@@ -186,7 +195,7 @@ export function AnalyticsTab({ api, networkStats }: AnalyticsTabProps) {
         </CardHeader>
         <CardContent>
           <div className="flex space-x-2 mb-4">
-            {(['1h', '24h', '7d'] as const).map((range) => (
+            {(['24h', '7d', '30d'] as const).map((range) => (
               <Badge
                 key={range}
                 variant={timeRange === range ? "default" : "outline"}

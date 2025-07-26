@@ -1,6 +1,7 @@
-import { Palette, Sun } from "lucide-react";
+import { memo, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Palette, Sun } from "lucide-react";
 import { Theme, ApiStatus } from "@/types";
 
 interface HeaderProps {
@@ -9,15 +10,15 @@ interface HeaderProps {
   onThemeChange: (theme: Theme) => void;
 }
 
-export function Header({ 
+export const Header = memo(function Header({ 
   apiStatus, 
   theme, 
   onThemeChange 
 }: HeaderProps) {
-  const handleThemeToggle = (checked: boolean) => {
+  const handleThemeToggle = useCallback((checked: boolean) => {
     const newTheme: Theme = checked ? "colored" : "monochrome";
     onThemeChange(newTheme);
-  };
+  }, [onThemeChange]);
 
   const isColored = theme === "colored";
 
@@ -52,4 +53,4 @@ export function Header({
       </div>
     </header>
   );
-} 
+}); 

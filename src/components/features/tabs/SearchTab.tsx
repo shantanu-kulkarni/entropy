@@ -1,26 +1,25 @@
-import { Search, Clock, Hash, User, AlertCircle, Loader2 } from "lucide-react";
+import { memo, useState, useEffect, useCallback, useMemo } from "react";
+import { Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SearchTabProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   onSearch: () => void;
-  api: any; // Polkadot API instance
+  api: any;
 }
 
 interface SearchResult {
-  type: 'block' | 'transaction' | 'address';
+  type: 'block' | 'address';
   data: any;
-  timestamp: number;
 }
 
-export function SearchTab({ searchQuery, onSearchQueryChange, onSearch, api }: SearchTabProps) {
+export const SearchTab = memo(function SearchTab({ searchQuery, onSearchQueryChange, onSearch, api }: SearchTabProps) {
   const [searchType, setSearchType] = useState<string>("all");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -35,29 +34,31 @@ export function SearchTab({ searchQuery, onSearchQueryChange, onSearch, api }: S
     }
   }, []);
 
-  const saveToHistory = (query: string) => {
+  const saveToHistory = useCallback((query: string) => {
     if (!query.trim()) return;
     const newHistory = [query, ...searchHistory.filter(h => h !== query)].slice(0, 10);
     setSearchHistory(newHistory);
     localStorage.setItem('entropy-search-history', JSON.stringify(newHistory));
-  };
+  }, [searchHistory]);
 
-  const performSearch = async () => {
+  const handleHistoryClick = useCallback((query: string) => {
+    onSearchQueryChange(query);
+  }, [onSearchQueryChange]);
+
+  const performSearch = useCallback(async () => {
     if (!searchQuery.trim() || !api) return;
-
+    
     setIsSearching(true);
     setError("");
+    setSearchResults([]);
     
     try {
-      const query = searchQuery.trim();
-      saveToHistory(query);
+      const results: SearchResult[] = [];
       
-      let results: SearchResult[] = [];
-
-      // Search by block number
-      if (/^\d+$/.test(query)) {
-        const blockNumber = parseInt(query);
-        try {
+      if (searchType === "all" || searchType === "block") {
+        // Search by block number
+        if (!isNaN(Number(searchQuery))) {
+          const blockNumber = parseInt(searchQuery);
           const hash = await api.rpc.chain.getBlockHash(blockNumber);
           const block = await api.rpc.chain.getBlock(hash);
           const header = await api.rpc.chain.getHeader(hash);
@@ -69,227 +70,194 @@ export function SearchTab({ searchQuery, onSearchQueryChange, onSearch, api }: S
               hash: hash.toHex(),
               extrinsics: block.block.extrinsics.length,
               parentHash: header.parentHash.toHex(),
-              stateRoot: header.stateRoot.toHex(),
-              timestamp: Date.now()
-            },
-            timestamp: Date.now()
+              stateRoot: header.stateRoot.toHex()
+            }
           });
-        } catch (e) {
-          setError(`Block ${blockNumber} not found`);
-        }
-      }
-      // Search by hash
-      else if (/^0x[a-fA-F0-9]{64}$/.test(query)) {
-        try {
-          const block = await api.rpc.chain.getBlock(query);
-          const header = await api.rpc.chain.getHeader(query);
-          
-          results.push({
-            type: 'block',
-            data: {
-              number: header.number.toNumber(),
-              hash: query,
-              extrinsics: block.block.extrinsics.length,
-              parentHash: header.parentHash.toHex(),
-              stateRoot: header.stateRoot.toHex(),
-              timestamp: Date.now()
-            },
-            timestamp: Date.now()
-          });
-        } catch (e) {
-          setError(`Hash ${query} not found`);
-        }
-      }
-      // Search by address (basic validation)
-      else if (/^[1-9A-HJ-NP-Za-km-z]{47,48}$/.test(query)) {
-        try {
-          // For addresses, we'll show basic info and try to get balance
-          let balance = '0';
+        } else {
+          // Search by hash
           try {
-            const accountInfo = await api.query.system.account(query);
-            balance = accountInfo.data.free.toString();
+            const block = await api.rpc.chain.getBlock(searchQuery);
+            const header = await api.rpc.chain.getHeader(searchQuery);
+            
+            results.push({
+              type: 'block',
+              data: {
+                number: header.number.toNumber(),
+                hash: searchQuery,
+                extrinsics: block.block.extrinsics.length,
+                parentHash: header.parentHash.toHex(),
+                stateRoot: header.stateRoot.toHex()
+              }
+            });
           } catch (e) {
-            // Balance query might fail, use default
+            // Not a valid hash
           }
-          
+        }
+      }
+      
+      if (searchType === "all" || searchType === "address") {
+        // Search by address
+        try {
+          const account = await api.query.system.account(searchQuery);
           results.push({
             type: 'address',
             data: {
-              address: query,
-              balance: balance,
-              transactions: 0 // Would need to scan blocks to count transactions
-            },
-            timestamp: Date.now()
+              address: searchQuery,
+              balance: account.data.free.toString()
+            }
           });
         } catch (e) {
-          setError(`Address ${query} not found`);
+          // Not a valid address
         }
       }
-      else {
-        setError("Invalid search format. Use block number, hash, or address.");
+      
+      if (results.length === 0) {
+        setError("No results found. Try a different search term.");
+      } else {
+        setSearchResults(results);
+        saveToHistory(searchQuery);
       }
-
-      setSearchResults(results);
-    } catch (e) {
+    } catch (error) {
       setError("Search failed. Please try again.");
+      console.error("Search error:", error);
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [searchQuery, searchType, api, saveToHistory]);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     performSearch();
-    onSearch();
-  };
+  }, [performSearch]);
 
-  const handleHistoryClick = (query: string) => {
-    onSearchQueryChange(query);
-  };
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  }, [handleSearch]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchQueryChange(e.target.value);
+  }, [onSearchQueryChange]);
+
+  const handleTypeChange = useCallback((value: string) => {
+    setSearchType(value);
+  }, []);
+
+  const searchHistoryItems = useMemo(() => 
+    searchHistory.map((query, index) => (
+      <TooltipProvider key={index}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge 
+              variant="outline" 
+              className="cursor-pointer hover:bg-gray-100 font-mono text-xs"
+              onClick={() => handleHistoryClick(query)}
+            >
+              {query}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Click to search for "{query}"</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )), [searchHistory, handleHistoryClick]);
 
   return (
     <div className="space-y-6">
-      <Card className="retro-card glow-green">
+      <Card className="retro-card glow-blue">
         <CardHeader>
           <CardTitle className="text-lg font-mono flex items-center">
             <Search className="h-5 w-5 mr-2" />
-            Search the Chain
+            Search Blockchain
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex space-x-4">
-              <div className="flex-1">
-                <Label htmlFor="search" className="font-mono">Search Query</Label>
-                <Input
-                  id="search"
-                  placeholder="Enter block number, hash, or address..."
-                  value={searchQuery}
-                  onChange={(e) => onSearchQueryChange(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="font-mono"
-                />
-              </div>
-
+        <CardContent className="space-y-4">
+          <div className="flex space-x-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Enter block number, hash, or address..."
+                value={searchQuery}
+                onChange={handleInputChange}
+                onKeyPress={handleKeyPress}
+                className="font-mono"
+              />
             </div>
+            <Select value={searchType} onValueChange={handleTypeChange}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="block">Block</SelectItem>
+                <SelectItem value="address">Address</SelectItem>
+              </SelectContent>
+            </Select>
             <Button 
-              className="w-full font-mono" 
-              onClick={handleSearch}
+              onClick={handleSearch} 
               disabled={isSearching || !searchQuery.trim()}
+              className="font-mono"
             >
               {isSearching ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Searching...
+                </>
               ) : (
-                <Search className="h-4 w-4 mr-2" />
+                <>
+                  <Search className="h-4 w-4 mr-2" />
+                  Search
+                </>
               )}
-              {isSearching ? "Searching..." : "Search Entropy Network"}
             </Button>
           </div>
+          
+          {searchHistory.length > 0 && (
+            <div>
+              <p className="text-sm font-mono text-gray-600 mb-2">Recent searches:</p>
+              <div className="flex flex-wrap gap-2">
+                {searchHistoryItems}
+              </div>
+            </div>
+          )}
+          
+          {error && (
+            <div className="text-red-500 font-mono text-sm">
+              {error}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Search History */}
-      {searchHistory.length > 0 && (
-        <Card className="retro-card">
-          <CardHeader>
-            <CardTitle className="text-lg font-mono flex items-center">
-              <Clock className="h-5 w-5 mr-2" />
-              Search History
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {searchHistory.map((query, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="cursor-pointer hover:bg-gray-100 font-mono"
-                  onClick={() => handleHistoryClick(query)}
-                >
-                  {query}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Error Display */}
-      {error && (
-        <Card className="retro-card border-red-300">
-          <CardContent className="pt-6">
-            <div className="flex items-center text-red-600">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              <span className="font-mono">{error}</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Search Results */}
       {searchResults.length > 0 && (
-        <Card className="retro-card">
-          <CardHeader>
-            <CardTitle className="text-lg font-mono flex items-center">
-              <Hash className="h-5 w-5 mr-2" />
-              Search Results
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {searchResults.map((result, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      {result.type === 'block' && <Hash className="h-4 w-4" />}
-                      {result.type === 'address' && <User className="h-4 w-4" />}
-                      <Badge variant="secondary" className="font-mono">
-                        {result.type.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <span className="text-sm text-gray-500 font-mono">
-                      {new Date(result.timestamp).toLocaleTimeString()}
-                    </span>
+        <div className="space-y-4">
+          {searchResults.map((result, index) => (
+            <Card key={index} className="retro-card">
+              <CardHeader>
+                <CardTitle className="text-sm font-mono">
+                  {result.type === 'block' ? 'Block Details' : 'Address Details'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {result.type === 'block' ? (
+                  <div className="space-y-1 font-mono text-sm">
+                    <div><strong>Number:</strong> {result.data.number}</div>
+                    <div><strong>Hash:</strong> {result.data.hash}</div>
+                    <div><strong>Extrinsics:</strong> {result.data.extrinsics}</div>
+                    <div><strong>Parent Hash:</strong> {result.data.parentHash}</div>
+                    <div><strong>State Root:</strong> {result.data.stateRoot}</div>
                   </div>
-                  
-                  {result.type === 'block' && (
-                    <div className="space-y-1">
-                      <div className="font-mono">
-                        <span className="font-bold">Block #{result.data.number}</span>
-                      </div>
-                      <div className="text-sm text-gray-600 font-mono">
-                        Hash: {result.data.hash.slice(0, 16)}...
-                      </div>
-                      <div className="text-sm text-gray-600 font-mono">
-                        Extrinsics: {result.data.extrinsics}
-                      </div>
-                      <div className="text-sm text-gray-600 font-mono">
-                        Parent: {result.data.parentHash.slice(0, 16)}...
-                      </div>
-                      <div className="text-sm text-gray-600 font-mono">
-                        State Root: {result.data.stateRoot.slice(0, 16)}...
-                      </div>
-                    </div>
-                  )}
-                  
-                  {result.type === 'address' && (
-                    <div className="space-y-1">
-                      <div className="font-mono">
-                        <span className="font-bold">Address</span>
-                      </div>
-                      <div className="text-sm text-gray-600 font-mono">
-                        {result.data.address.slice(0, 16)}...
-                      </div>
-                      <div className="text-sm text-gray-600 font-mono">
-                        Balance: {parseInt(result.data.balance) / 1e12} ENTR
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ) : (
+                  <div className="space-y-1 font-mono text-sm">
+                    <div><strong>Address:</strong> {result.data.address}</div>
+                    <div><strong>Balance:</strong> {result.data.balance}</div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );
-} 
+}); 
