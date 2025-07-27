@@ -10,7 +10,7 @@ interface FooterProps {
 export const Footer = memo(function Footer({ theme }: FooterProps) {
   return (
     <footer
-      className={`border-t retro-card mt-12 ${
+      className={`border-t retro-card bottom-0 w-full ${
         theme === "monochrome" ? "border-gray-300" : "border-green-300"
       }`}
     >

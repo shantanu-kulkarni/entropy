@@ -40,3 +40,10 @@ export const NETWORK_STATS_GLOWS = {
 export const ENTROPY_ENDPOINT = "wss://testnet.entropy.xyz";
 
 export const MAX_BLOCKS_DISPLAY = 20;
+
+// Refresh intervals (in milliseconds)
+export const REFRESH_INTERVALS = {
+  networkStats: 60000, // 1 minute
+  analyticsDebounce: 30000, // 30 seconds
+  blockSubscription: 10000, // 1 second (for real-time blocks)
+} as const;

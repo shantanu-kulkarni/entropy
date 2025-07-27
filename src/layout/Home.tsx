@@ -1,11 +1,13 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { Globe, Search, Users, Zap, BarChart3, Settings } from "lucide-react";
-import { Header } from "@/components/features/Header";
-import { NetworkStats } from "@/components/features/NetworkStats";
-import { QuickActions } from "@/components/features/QuickActions";
-import { MainTabs } from "@/components/features/MainTabs";
-import { Footer } from "@/components/features/Footer";
+import { Header } from "@/components/global/Header";
+import { Footer } from "@/components/global/Footer";
+import { 
+  NetworkStats, 
+  QuickActions, 
+  MainTabs 
+} from "@/components/features/home";
 import {
   BlockData,
   NetworkStats as NetworkStatsType,
@@ -17,33 +19,40 @@ import {
   RETRO_GRADIENTS,
   ENTROPY_ENDPOINT,
   MAX_BLOCKS_DISPLAY,
+  REFRESH_INTERVALS,
 } from "@/constants";
 
 interface HomeProps {
   onThemeChange: (theme: Theme) => void;
   preloadedApi?: ApiPromise | null;
   preloadedApiStatus?: ApiStatus;
+  preloadedBlocks?: BlockData[];
+  preloadedNetworkStats?: NetworkStatsType | null;
 }
 
 export function Home({
   onThemeChange,
   preloadedApi,
   preloadedApiStatus,
+  preloadedBlocks = [],
+  preloadedNetworkStats,
 }: HomeProps) {
   const [apiStatus, setApiStatus] = useState<ApiStatus>(
     preloadedApiStatus || "connecting"
   );
   const [api, setApi] = useState<ApiPromise | null>(preloadedApi || null);
-  const [blocks, setBlocks] = useState<BlockData[]>([]);
+  const [blocks, setBlocks] = useState<BlockData[]>(preloadedBlocks);
   const [randomBlock, setRandomBlock] = useState<BlockData | null>(null);
   const [surfing, setSurfing] = useState(false);
-  const [networkStats, setNetworkStats] = useState<NetworkStatsType>({
-    totalBlocks: 0,
-    totalTransactions: 0,
-    activeValidators: 0,
-    networkHashrate: 0,
-    averageBlockTime: 0,
-  });
+  const [networkStats, setNetworkStats] = useState<NetworkStatsType>(
+    preloadedNetworkStats || {
+      totalBlocks: 0,
+      totalTransactions: 0,
+      activeValidators: 0,
+      networkHashrate: 0,
+      averageBlockTime: 0,
+    }
+  );
   const [selectedTab, setSelectedTab] = useState("explore");
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -72,6 +81,30 @@ export function Home({
     };
   }, [preloadedApi, preloadedApiStatus]);
 
+  // Initialize with preloaded data if available
+  useEffect(() => {
+    if (preloadedBlocks.length > 0) {
+      // Remove duplicates from preloaded blocks
+      const uniqueBlocks = preloadedBlocks.reduce((acc, block) => {
+        const isDuplicate = acc.some(
+          (existingBlock) => existingBlock.number === block.number && existingBlock.hash === block.hash
+        );
+        if (!isDuplicate) {
+          acc.push(block);
+        } else {
+          console.log(`Duplicate preloaded block removed: #${block.number} - ${block.hash}`);
+        }
+        return acc;
+      }, [] as BlockData[]);
+      
+      console.log(`Loaded ${uniqueBlocks.length} unique blocks from preloaded data`);
+      setBlocks(uniqueBlocks);
+    }
+    if (preloadedNetworkStats) {
+      setNetworkStats(preloadedNetworkStats);
+    }
+  }, [preloadedBlocks, preloadedNetworkStats]);
+
   // Subscribe to new blocks
   useEffect(() => {
     if (!api) return;
@@ -83,7 +116,19 @@ export function Home({
           number: header.number.toNumber(),
           hash: header.hash.toHex(),
         };
+        
         setBlocks((prev) => {
+          // Check for duplicates by both block number and hash
+          const isDuplicate = prev.some(
+            (block) => block.number === newBlock.number && block.hash === newBlock.hash
+          );
+          
+          if (isDuplicate) {
+            console.log(`Duplicate block detected: #${newBlock.number} - ${newBlock.hash}`);
+            return prev; // Return existing blocks without adding duplicate
+          }
+          
+          console.log(`New block added: #${newBlock.number} - ${newBlock.hash}`);
           const updated = [newBlock, ...prev].slice(0, MAX_BLOCKS_DISPLAY);
           return updated;
         });
@@ -99,13 +144,13 @@ export function Home({
     };
   }, [api]);
 
-  // Auto-refresh functionality (simplified - always refresh every 10 seconds)
+  // Auto-refresh functionality - refresh every 1 minute
   useEffect(() => {
     if (!api) return;
 
     const interval = setInterval(() => {
       updateNetworkStats();
-    }, 10000); // 10 seconds
+    }, REFRESH_INTERVALS.networkStats); // 60 seconds (1 minute)
 
     return () => clearInterval(interval);
   }, [api]);
@@ -162,6 +207,7 @@ export function Home({
         }
       } catch (e) {
         // Fallback to existing calculation
+        console.log("No transactions found, using mock data");
         totalTransactions = blocks.reduce(
           (sum, block) => sum + (block.extrinsics || 0),
           0
@@ -178,6 +224,7 @@ export function Home({
           networkHashrate = difficulty.toNumber() / averageBlockTime;
         } else {
           // Fallback to mock data
+          console.log("No difficulty found, using mock data");
           networkHashrate = Math.floor(Math.random() * 1000) + 500;
         }
       } catch (e) {
@@ -291,46 +338,48 @@ export function Home({
 
   return (
     <div
-      className={`min-h-screen ${
+      className={`min-h-screen flex flex-col ${
         RETRO_GRADIENTS[currentTheme]
       } retro-bg transition-all duration-1000 ${
         currentTheme === "monochrome" ? "monochrome" : ""
       }`}
     >
-      <div className="fade-in-up-stagger fade-in-up-stagger-1 mb-8">
-        <Header
-          apiStatus={apiStatus}
-          theme={currentTheme}
-          onThemeChange={handleThemeChange}
-        />
+      <div className="flex-1">
+        <div className="fade-in-up-stagger fade-in-up-stagger-1 mb-8">
+          <Header
+            apiStatus={apiStatus}
+            theme={currentTheme}
+            onThemeChange={handleThemeChange}
+          />
+        </div>
+        <div className="fade-in-up-stagger fade-in-up-stagger-2 px-4">
+          <NetworkStats stats={networkStats} theme={currentTheme} />
+        </div>
+        <div className="fade-in-up-stagger fade-in-up-stagger-3 px-4">
+          <QuickActions actions={quickActions} theme={currentTheme} />
+        </div>
+        <div className="fade-in-up-stagger fade-in-up-stagger-4 px-4">
+          <MainTabs
+            selectedTab={selectedTab}
+            onTabChange={setSelectedTab}
+            blocks={blocks}
+            randomBlock={randomBlock}
+            surfing={surfing}
+            favorites={favorites}
+            theme={currentTheme}
+            networkStats={networkStats}
+            searchQuery={searchQuery}
+            api={api}
+            onSurfChain={surfTheChain}
+            onToggleFavorite={toggleFavorite}
+            onRemoveFavorite={removeFavorite}
+            onSearchQueryChange={setSearchQuery}
+            onSearch={handleSearch}
+            onThemeChange={handleThemeChange}
+          />
+        </div>
       </div>
-      <div className="fade-in-up-stagger fade-in-up-stagger-2 px-4">
-        <NetworkStats stats={networkStats} theme={currentTheme} />
-      </div>
-      <div className="fade-in-up-stagger fade-in-up-stagger-3 px-4">
-        <QuickActions actions={quickActions} theme={currentTheme} />
-      </div>
-      <div className="fade-in-up-stagger fade-in-up-stagger-4 px-4">
-        <MainTabs
-          selectedTab={selectedTab}
-          onTabChange={setSelectedTab}
-          blocks={blocks}
-          randomBlock={randomBlock}
-          surfing={surfing}
-          favorites={favorites}
-          theme={currentTheme}
-          networkStats={networkStats}
-          searchQuery={searchQuery}
-          api={api}
-          onSurfChain={surfTheChain}
-          onToggleFavorite={toggleFavorite}
-          onRemoveFavorite={removeFavorite}
-          onSearchQueryChange={setSearchQuery}
-          onSearch={handleSearch}
-          onThemeChange={handleThemeChange}
-        />
-      </div>
-      <div className="fade-in-up-stagger fade-in-up-stagger-5">
+      <div className="fade-in-up-stagger fade-in-up-stagger-5 mt-auto">
         <Footer theme={currentTheme} />
       </div>
     </div>

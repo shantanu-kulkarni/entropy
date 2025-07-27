@@ -27,12 +27,12 @@ export function FavoritesTab({
                 key={hash}
                 className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200"
               >
-                <div className="font-mono text-sm">{hash.slice(0, 32)}...</div>
+                <div className="font-mono text-sm break-all flex-1 mr-2">{hash}</div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onRemoveFavorite(hash)}
-                  className="text-red-500 hover:text-red-600"
+                  className="text-red-500 hover:text-red-600 flex-shrink-0"
                 >
                   <X className="h-4 w-4" />
                 </Button>

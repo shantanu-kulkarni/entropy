@@ -58,12 +58,12 @@ export function ExploreTab({
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                       <Database className="h-4 w-4 text-green-600" />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="font-mono font-bold text-green-700">
                         #{block.number}
                       </div>
-                      <div className="font-mono text-xs text-gray-500 truncate w-32">
-                        {block.hash.slice(0, 16)}...
+                      <div className="font-mono text-xs text-gray-500 break-all">
+                        {block.hash}
                       </div>
                     </div>
                   </div>
@@ -71,7 +71,7 @@ export function ExploreTab({
                     variant="ghost"
                     size="sm"
                     onClick={() => onToggleFavorite(block.hash)}
-                    className="text-yellow-500 hover:text-yellow-600"
+                    className="text-yellow-500 hover:text-yellow-600 flex-shrink-0 ml-2"
                   >
                     {favorites.includes(block.hash) ? (
                       <Star className="h-4 w-4 fill-current" />
@@ -107,16 +107,16 @@ export function ExploreTab({
                   </Badge>
                 </div>
                 <div className="space-y-2 text-sm font-mono">
-                  <div className="flex justify-between">
+                  <div className="flex flex-col">
                     <span className="text-gray-600">Hash:</span>
-                    <span className="text-blue-600 truncate w-48">
-                      {randomBlock.hash.slice(0, 20)}...
+                    <span className="text-blue-600 break-all">
+                      {randomBlock.hash}
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex flex-col">
                     <span className="text-gray-600">Parent:</span>
-                    <span className="text-blue-600 truncate w-48">
-                      {randomBlock.parentHash?.slice(0, 20)}...
+                    <span className="text-blue-600 break-all">
+                      {randomBlock.parentHash || 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between">

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-// Remove: import { useNavigate } from "react-router-dom";
+import { dataLoader, PreloadedData } from "@/lib/data-loader";
 
 const TITLE_TEXT = "Entropy";
 const BLOCK_COUNT = TITLE_TEXT.length;
@@ -10,8 +10,12 @@ const BLOCK_GAP = 12; // px, tighter for per-character
 const TITLE_WIDTH = BLOCK_COUNT * BLOCK_WIDTH + (BLOCK_COUNT - 1) * BLOCK_GAP;
 const TITLE_HEIGHT = 100; // px
 
-// Accept an optional onSplashEnd prop
-export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
+// Accept an optional onSplashEnd prop with preloaded data
+export function SplashScreen({ 
+  onSplashEnd 
+}: { 
+  onSplashEnd?: (preloadedData: PreloadedData) => void 
+}) {
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -19,7 +23,26 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
   const [blocksFallen, setBlocksFallen] = useState(false);
   const [blocksGrow, setBlocksGrow] = useState(false);
   const [fullyCovered, setFullyCovered] = useState(false);
-  // Remove: const navigate = useNavigate ? useNavigate() : () => {};
+  const [dataLoadingProgress, setDataLoadingProgress] = useState(0);
+  const [preloadedData, setPreloadedData] = useState<PreloadedData | null>(null);
+
+  // Start data loading when component mounts
+  useEffect(() => {
+    const startDataLoading = async () => {
+      try {
+        console.log("Starting data preload during splash...");
+        const data = await dataLoader.loadAllData();
+        setPreloadedData(data);
+        setDataLoadingProgress(100);
+        console.log("Data preload completed during splash");
+      } catch (error) {
+        console.error("Failed to preload data during splash:", error);
+        setDataLoadingProgress(100); // Mark as complete even on error
+      }
+    };
+
+    startDataLoading();
+  }, []);
 
   useEffect(() => {
     // Animate blocks falling in, then start oscillation
@@ -60,7 +83,7 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
     });
   }, []);
 
-  // Enhanced animated phrase at bottom right
+  // Enhanced animated phrase at bottom right with data loading progress
   const phrases = [
     { base: "Setting your experience", end: "...", duration: 2000 },
     { base: "Connecting to the network", end: "...", duration: 2000 },
@@ -100,29 +123,32 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
         if (i <= end.length - 1) {
           setTypedEnd(end.slice(0, i + 1));
           i++;
-          // Randomize interval for more natural effect
-          setTimeout(typeEnd, 80 + Math.random() * 60);
+          setTimeout(typeEnd, 100);
         } else {
-          setShowCursor(false);
+          // For "Let's Go!!!", don't cycle to next phrase - let it stay
+          if (phrases[phraseIdx].base === "Let's Go") {
+            // Keep "Let's Go!!!" on screen until user interaction
+            return;
+          }
+          
+          // Wait for duration, then move to next phrase (only for other phrases)
+          setTimeout(() => {
+            setAnimatingOut(true);
+            setTimeout(() => {
+              setPhraseIdx((prev) => (prev + 1) % phrases.length);
+              setShow(false);
+              setTypedEnd("");
+              setShowCursor(true);
+              setAnimatingOut(false);
+            }, 400);
+          }, phrases[phraseIdx].duration);
         }
       }
       typeEnd();
-    }, 200);
-    // Animate out before switching
-    const outTimeout = setTimeout(() => {
-      setAnimatingOut(true);
-      setTimeout(() => {
-        setShow(false);
-        setTypedEnd("");
-        setShowCursor(false);
-        setPhraseIdx((prev) => (prev + 1) % phrases.length);
-      }, 400); // match out animation duration
-    }, phrases[phraseIdx].duration);
-    return () => {
-      clearTimeout(inTimeout);
-      clearTimeout(outTimeout);
-    };
-  }, [phraseIdx, blocksFallen]);
+    }, 500);
+
+    return () => clearTimeout(inTimeout);
+  }, [blocksFallen, phraseIdx]);
 
   // Animate blocks growing when Let's Go!!! appears
   useEffect(() => {
@@ -207,6 +233,8 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
   const [cubePulse, setCubePulse] = useState(false);
   const [cubeExpand, setCubeExpand] = useState(false);
   const [cubeTransitionStarted, setCubeTransitionStarted] = useState(false);
+  const [showLetsGo, setShowLetsGo] = useState(false);
+  const [letsGoFadeOut, setLetsGoFadeOut] = useState(false);
 
   // Trigger cube transition after button click (only once)
   useEffect(() => {
@@ -221,14 +249,20 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
         await new Promise((resolve) => setTimeout(resolve, 100));
         setCubePulse(true); // start pulse
         await new Promise((resolve) => setTimeout(resolve, 1100));
-        setCubeExpand(true); // expand cube
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        if (onSplashEnd) onSplashEnd(); // complete transition
+        setCubeExpand(true); // expand cube (screen turns white)
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        setShowLetsGo(true); // show "Let's go!" text
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setLetsGoFadeOut(true); // fade out "Let's go!" text
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        if (onSplashEnd && preloadedData) {
+          onSplashEnd(preloadedData); // complete transition with preloaded data
+        }
       };
 
       transitionSequence();
     }
-  }, [buttonClicked, onSplashEnd, cubeTransitionStarted]);
+  }, [buttonClicked, onSplashEnd, cubeTransitionStarted, preloadedData]);
 
   // Animation styles
   const phraseAnimStyle = {
@@ -484,14 +518,82 @@ export function SplashScreen({ onSplashEnd }: { onSplashEnd?: () => void }) {
               animation: cubePulse
                 ? "smoothBlink 0.8s ease-in-out infinite"
                 : "none",
+              position: "relative",
             }}
-          />
+          >
+            {/* "Let's surf!" text overlay */}
+            {cubePulse && !cubeExpand && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  fontFamily: '"Press Start 2P", monospace',
+                  fontSize: 12,
+                  color: "#000",
+                  textAlign: "center",
+                  whiteSpace: "nowrap",
+                  opacity: cubePulse ? 1 : 0,
+                  transition: "opacity 0.3s ease-in-out",
+                  zIndex: 1001,
+                  textShadow: "0 0 2px #fff",
+                  animation: "textPulse 0.8s ease-in-out infinite",
+                }}
+              >
+                Let's surf!
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* "Let's go!" text overlay on white screen */}
+      {showLetsGo && (
+        <div
+          style={{
+            position: "fixed",
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            zIndex: 1002,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "none",
+            background: "transparent",
+          }}
+        >
+          <div
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              fontSize: 48,
+              color: "#000",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+              opacity: letsGoFadeOut ? 0 : 1,
+              transition: "opacity 0.5s ease-in-out",
+              textShadow: "0 0 4px rgba(0,0,0,0.1)",
+              animation: letsGoFadeOut ? "none" : "letsGoAppear 0.5s ease-out",
+            }}
+          >
+            Let's go!
+          </div>
         </div>
       )}
       <style>{`
         @keyframes smoothBlink {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.3; transform: scale(1.05); }
+        }
+        @keyframes textPulse {
+          0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
+        }
+        @keyframes letsGoAppear {
+          0% { opacity: 0; transform: scale(0.8); }
+          100% { opacity: 1; transform: scale(1); }
         }
         @keyframes robotic-blink {
           0%, 60% { opacity: 1; }

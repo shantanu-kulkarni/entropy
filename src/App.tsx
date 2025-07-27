@@ -4,6 +4,7 @@ import { SplashScreen } from "@/components/ui/splash-screen";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Home } from "@/layout/Home";
 import { Theme } from "@/types";
+import { PreloadedData } from "@/lib/data-loader";
 import {
   TransitionProvider,
   useTransition,
@@ -13,6 +14,7 @@ import { TransitionOverlay } from "@/components/ui/transition-overlay";
 function AppContent() {
   const [showSplash, setShowSplash] = useState(true);
   const [globalTheme, setGlobalTheme] = useState<Theme>("monochrome");
+  const [preloadedData, setPreloadedData] = useState<PreloadedData | null>(null);
   const { isTransitioning, transitionTheme, startTransition, endTransition } =
     useTransition();
   const navigate = useNavigate();
@@ -30,7 +32,8 @@ function AppContent() {
     };
   }, [isTransitioning]);
 
-  const handleSplashEnd = () => {
+  const handleSplashEnd = (data: PreloadedData) => {
+    setPreloadedData(data);
     startTransition(globalTheme);
     // Navigate immediately to prevent white flash
     setShowSplash(false);
@@ -59,7 +62,15 @@ function AppContent() {
         />
         <Route
           path="/home"
-          element={<Home onThemeChange={handleThemeChange} />}
+          element={
+            <Home 
+              onThemeChange={handleThemeChange} 
+              preloadedApi={preloadedData?.api || null}
+              preloadedApiStatus={preloadedData?.apiStatus || "connecting"}
+              preloadedBlocks={preloadedData?.blocks || []}
+              preloadedNetworkStats={preloadedData?.networkStats || null}
+            />
+          }
         />
       </Routes>
     </>
