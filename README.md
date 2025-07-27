@@ -267,32 +267,6 @@ entropy/
 
 ## 🚀 Future Evolution
 
-### Short-term Enhancements (1-2 months)
-- **Real-time Notifications**: Push notifications for new blocks or significant network events
-- **Advanced Search Filters**: Search by transaction type, validator, or time range
-- **Export Functionality**: Export search results and analytics data
-- **Keyboard Shortcuts**: Power user features for faster navigation
-
-### Medium-term Features (3-6 months)
-- **Multi-network Support**: Connect to other Substrate-based networks
-- **Custom Dashboards**: User-configurable analytics and metrics
-- **Social Features**: Share interesting blocks or transactions
-- **Mobile Companion App**: Lightweight mobile version for notifications
-
-### Long-term Vision (6+ months)
-- **Decentralized Identity**: Integration with blockchain identity systems
-- **NFT Gallery**: Browse and interact with NFTs on the network
-- **DeFi Integration**: View and interact with DeFi protocols
-- **Community Features**: User-generated content and discussions
-- **API for Developers**: Public API for third-party integrations
-
-### Product Strategy
-- **User Research**: Conduct user interviews to understand exploration patterns
-- **Analytics Integration**: Track user behavior to optimize discovery features
-- **Community Building**: Foster a community of blockchain explorers
-- **Partnerships**: Collaborate with other blockchain projects and tools
-
-### Core Improvements
 The application will focus on **simplifying the user experience** through improved loading splash screens, enhanced real-time notifications, and streamlined navigation. User research and analytics integration will drive data-informed decisions to optimize the casual exploration experience, ensuring users can discover blockchain content effortlessly while maintaining the nostalgic AOL-era charm.
 
 ## 📄 License
